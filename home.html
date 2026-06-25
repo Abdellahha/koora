@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Streaming Hub</title>
+<style>
+  :root{
+    --bg:#0b0d12;
+    --panel:#12151c;
+    --panel2:#181c25;
+    --accent:#ff3b3b;
+    --accent2:#ff7a3b;
+    --accent3:#3b82ff;
+    --accent4:#3bffd0;
+    --text:#eef0f4;
+    --muted:#8a90a0;
+    --border:rgba(255,255,255,0.07);
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;
+    min-height:100%;
+    background:radial-gradient(circle at 20% -10%, #1a1f2b 0%, var(--bg) 55%);
+    color:var(--text);
+    font-family:'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+  .wrap{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+    padding:40px 20px;
+    text-align:center;
+  }
+  .title{
+    font-size:34px;
+    font-weight:800;
+    margin:0 0 6px;
+    letter-spacing:.3px;
+  }
+  .subtitle{
+    color:var(--muted);
+    font-size:15px;
+    margin:0 0 48px;
+  }
+  .cards{
+    display:flex;
+    gap:28px;
+    flex-wrap:wrap;
+    justify-content:center;
+    max-width:900px;
+  }
+  .card{
+    width:320px;
+    padding:34px 28px;
+    border-radius:22px;
+    background:linear-gradient(160deg, var(--panel) 0%, var(--panel2) 100%);
+    border:1px solid var(--border);
+    cursor:pointer;
+    text-decoration:none;
+    color:var(--text);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:16px;
+    transition:transform .3s cubic-bezier(.4,0,.2,1), box-shadow .3s ease, border-color .3s ease;
+    position:relative;
+    overflow:hidden;
+  }
+  .card::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    opacity:0;
+    transition:opacity .3s ease;
+    z-index:0;
+  }
+  .card:hover{
+    transform:translateY(-8px) scale(1.02);
+    box-shadow:0 20px 50px rgba(0,0,0,.45);
+  }
+  .card:hover::before{ opacity:1; }
+  .card.bein::before{ background:radial-gradient(circle at 50% 0%, rgba(255,59,59,0.12), transparent 70%); }
+  .card.other::before{ background:radial-gradient(circle at 50% 0%, rgba(59,130,255,0.12), transparent 70%); }
+  .card.bein:hover{ border-color:rgba(255,59,59,0.4); }
+  .card.other:hover{ border-color:rgba(59,130,255,0.4); }
+
+  .icon{
+    width:64px;height:64px;
+    border-radius:18px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:26px;
+    font-weight:800;
+    z-index:1;
+    transition:transform .3s ease;
+  }
+  .card:hover .icon{ transform:scale(1.08) rotate(-3deg); }
+  .bein .icon{ background:linear-gradient(135deg, var(--accent), var(--accent2)); box-shadow:0 8px 24px rgba(255,59,59,0.35); }
+  .other .icon{ background:linear-gradient(135deg, var(--accent3), var(--accent4)); box-shadow:0 8px 24px rgba(59,130,255,0.35); }
+
+  .card h2{
+    margin:0;
+    font-size:20px;
+    font-weight:700;
+    z-index:1;
+  }
+  .card p{
+    margin:0;
+    font-size:13px;
+    color:var(--muted);
+    z-index:1;
+  }
+  .badge{
+    z-index:1;
+    font-size:11px;
+    padding:5px 14px;
+    border-radius:20px;
+    font-weight:600;
+    letter-spacing:.4px;
+  }
+  .bein .badge{ background:rgba(255,59,59,0.15); color:var(--accent); border:1px solid rgba(255,59,59,0.3); }
+  .other .badge{ background:rgba(59,130,255,0.15); color:#6ea8ff; border:1px solid rgba(59,130,255,0.3); }
+
+  .footer-note{
+    margin-top:50px;
+    color:var(--muted);
+    font-size:12px;
+  }
+
+  @media (max-width:700px){
+    .cards{ gap:18px; }
+    .card{ width:100%; max-width:340px; padding:28px 22px; }
+    .title{ font-size:26px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <h1 class="title">Streaming Hub</h1>
+  <p class="subtitle">Choose a category to start watching</p>
+
+  <div class="cards">
+    <a href="player.html" class="card bein">
+      <div class="icon">⚽</div>
+      <h2>beIN Sports</h2>
+      <p>Max 1 · Max 2 · Max 3 · Max 4</p>
+      <span class="badge">LIVE CHANNELS</span>
+    </a>
+
+    <a href="player2.html" class="card other">
+      <div class="icon">📺</div>
+      <h2>Other Channels</h2>
+      <p>Additional streaming sources</p>
+      <span class="badge">COMING SOON</span>
+    </a>
+  </div>
+
+  <div class="footer-note">Tap a category to open its channel playlist</div>
+</div>
+
+</body>
+</html>
