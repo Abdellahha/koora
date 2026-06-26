@@ -255,7 +255,7 @@
           <div class="ico">🏆</div>
           Pick two teams in the menu and hit Watch.
         </div>
-        <iframe id="videoIframe" src="" allowfullscreen allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+        <iframe id="videoIframe" src="" allowfullscreen webkit-allowfullscreen playsinline webkit-playsinline allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
           referrerpolicy="no-referrer" style="display:none;"></iframe>
       </div>
     </div>
@@ -363,21 +363,31 @@
     const url = BASE_URL+selA.slug+'-vs-'+selB.slug+'/7';
     titleEl.textContent = selA.name+' vs '+selB.name;
     pholder.style.display = 'none';
-    iframe.style.display = 'block';
     loading.classList.remove('hidden');
     frame.classList.remove('show');
-    iframe.src = 'about:blank';
-    setTimeout(()=>{ iframe.src = url; }, 160);
+    const old = document.getElementById('videoIframe');
+    const newIframe = document.createElement('iframe');
+    newIframe.id = 'videoIframe';
+    newIframe.allowFullscreen = true;
+    newIframe.setAttribute('webkit-allowfullscreen', '');
+    newIframe.setAttribute('playsinline', '');
+    newIframe.setAttribute('webkit-playsinline', '');
+    newIframe.setAttribute('allow', 'autoplay; fullscreen; encrypted-media; picture-in-picture');
+    newIframe.setAttribute('referrerpolicy', 'no-referrer');
+    newIframe.style.cssText = 'width:100%;height:100%;border:0;display:block;';
+    newIframe.addEventListener('load', onIframeLoad);
+    old.replaceWith(newIframe);
+    newIframe.src = url;
     if(window.innerWidth<=860) closeSidebar();
   }
-
-  iframe.addEventListener('load', ()=>{
-    if(!iframe.src||iframe.src==='about:blank') return;
+  function onIframeLoad() {
     setTimeout(()=>{ loading.classList.add('hidden'); frame.classList.add('show'); }, 300);
-  });
+  }
+  document.getElementById('videoIframe').addEventListener('load', onIframeLoad);
 
   document.getElementById('reloadBtn').addEventListener('click', ()=>{
-    if(iframe.src&&iframe.src!=='about:blank'){ loading.classList.remove('hidden'); iframe.src=iframe.src; }
+    const iframe = document.getElementById('videoIframe');
+    if(iframe && iframe.src && iframe.src!=='about:blank'){ loading.classList.remove('hidden'); iframe.src=iframe.src; }
   });
   document.getElementById('fullscreenBtn').addEventListener('click', ()=>{
     const el=document.documentElement;
