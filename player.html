@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Koora Live">
@@ -33,7 +33,6 @@
     overflow: hidden;
   }
 
-  /* Ambient glow behind sidebar */
   .bg-glow {
     position: fixed;
     top: -200px; left: -200px;
@@ -51,7 +50,6 @@
     z-index: 1;
   }
 
-  /* ── Sidebar ── */
   .sidebar {
     width: 300px;
     min-width: 260px;
@@ -116,11 +114,11 @@
     gap: 6px;
     scrollbar-width: thin;
     scrollbar-color: rgba(255,255,255,0.1) transparent;
+    -webkit-overflow-scrolling: touch;
   }
   .playlist::-webkit-scrollbar { width: 4px; }
   .playlist::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
 
-  /* Glass channel row */
   .channel {
     display: flex; align-items: center; gap: 12px;
     padding: 11px 14px;
@@ -131,16 +129,7 @@
     transition: background 0.22s ease, transform 0.2s ease, border-color 0.22s ease;
     position: relative; overflow: hidden;
   }
-  .channel::before {
-    content: '';
-    position: absolute;
-    inset: 0; border-radius: 16px;
-    background: linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.04) 50%, transparent 100%);
-    opacity: 0; transition: opacity 0.3s;
-  }
   .channel:hover { background: rgba(255,255,255,0.06); transform: translateX(3px); }
-  .channel:hover::before { opacity: 1; }
-
   .channel.active {
     background: linear-gradient(105deg, rgba(255,59,48,0.18), rgba(255,59,48,0.06));
     border-color: rgba(255,59,48,0.35);
@@ -190,14 +179,12 @@
     font-size: 11px; color: var(--muted);
   }
 
-  /* ── Main area ── */
   .main {
     flex: 1;
     display: flex; flex-direction: column;
     overflow: hidden;
   }
 
-  /* Glass topbar */
   .topbar {
     display: flex; align-items: center; justify-content: space-between;
     padding: max(14px, env(safe-area-inset-top)) 20px 14px;
@@ -210,7 +197,6 @@
 
   .topbar-left { display: flex; align-items: center; gap: 10px; }
 
-  /* Glass icon buttons */
   .glass-btn {
     height: 36px;
     border-radius: 11px;
@@ -237,20 +223,16 @@
 
   .menu-btn { display: none; }
 
-  .now-playing { display: flex; align-items: center; gap: 10px; }
   .now-playing h2 { font-size: 16px; font-weight: 600; letter-spacing: -0.2px; }
-
   .live-badge {
     font-size: 10px; font-weight: 700; letter-spacing: 0.8px;
     padding: 4px 10px; border-radius: 20px;
-    background: rgba(255,59,48,0.15);
-    color: #ff6b6b;
+    background: rgba(255,59,48,0.15); color: #ff6b6b;
     border: 1px solid rgba(255,59,48,0.35);
   }
 
   .controls { display: flex; gap: 8px; }
 
-  /* Player area */
   .player-wrap {
     flex: 1;
     display: flex; align-items: center; justify-content: center;
@@ -265,9 +247,7 @@
     border-radius: 18px;
     overflow: hidden;
     background: #000;
-    box-shadow:
-      0 25px 80px rgba(0,0,0,0.7),
-      0 0 0 1px rgba(255,255,255,0.06);
+    box-shadow: 0 25px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.06);
     position: relative;
     opacity: 0;
     transform: scale(0.985);
@@ -280,7 +260,6 @@
     border: 0; display: block;
   }
 
-  /* Loading overlay */
   .loading-overlay {
     position: absolute; inset: 0;
     display: flex; align-items: center; justify-content: center;
@@ -303,7 +282,6 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   .loading-text { font-size: 12px; color: var(--muted); letter-spacing: 0.3px; }
 
-  /* Backdrop overlay for mobile sidebar */
   .backdrop {
     display: none;
     position: fixed; inset: 0;
@@ -377,8 +355,7 @@
           id="videoIframe"
           src=""
           allowfullscreen
-          allow="autoplay; encrypted-media; picture-in-picture"
-          sandbox="allow-scripts allow-same-origin allow-forms allow-popups-to-escape-sandbox"
+          allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
           referrerpolicy="no-referrer">
         </iframe>
       </div>
@@ -388,29 +365,21 @@
 </div>
 
 <script>
-  // ── Popup blocker: intercept window.open but allow stream sources ──
   const _origOpen = window.open.bind(window);
   window.open = function(url, name, features) {
-    // Block anything that isn't a known stream domain
     if (!url) return null;
     const allowed = ['ntv.cx','ntvs.cx','youtube.com','youtu.be'];
     try {
       const host = new URL(url).hostname.replace(/^www\./, '');
-      if (allowed.some(d => host === d || host.endsWith('.'+d))) {
-        return null; // Don't open even allowed ones as popups — keep in iframe
-      }
+      if (allowed.some(d => host === d || host.endsWith('.'+d))) return null;
     } catch(e) {}
     console.warn('Popup blocked:', url);
     return null;
   };
 
-  // Also intercept _blank link clicks on the page
   document.addEventListener('click', function(e) {
     const a = e.target.closest('a');
-    if (a && a.target === '_blank') {
-      e.preventDefault();
-      e.stopPropagation();
-    }
+    if (a && a.target === '_blank') { e.preventDefault(); e.stopPropagation(); }
   }, true);
 
   const channels = [
