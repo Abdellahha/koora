@@ -2,494 +2,176 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>beIN Sports Player</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Koora Live">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#000000">
+<link rel="manifest" href="manifest.json">
+<title>beIN Sport</title>
 <style>
-  :root{
-    --bg:#0b0d12;
-    --panel:#12151c;
-    --panel2:#181c25;
-    --accent:#ff3b3b;
-    --accent2:#ff7a3b;
-    --text:#eef0f4;
-    --muted:#8a90a0;
-    --border:rgba(255,255,255,0.07);
+  :root {
+    --glass-border: rgba(255,255,255,0.16);
+    --text: #fff;
+    --muted: rgba(255,255,255,0.5);
+    --accent: #ff3b30;
+    --accent-glow: rgba(255,59,48,0.35);
+    --green: #30d158;
   }
-  *{box-sizing:border-box;}
-  html,body{
-    margin:0;
-    height:100%;
-    background:radial-gradient(circle at 20% -10%, #1a1f2b 0%, var(--bg) 55%);
-    color:var(--text);
-    font-family:'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    overflow:hidden;
-  }
-  .app{
-    display:flex;
-    height:100vh;
-    width:100vw;
-  }
-
-  /* Sidebar */
-  .sidebar{
-    width:320px;
-    min-width:260px;
-    background:linear-gradient(180deg, var(--panel) 0%, var(--panel2) 100%);
-    border-right:1px solid var(--border);
-    display:flex;
-    flex-direction:column;
-    transition:transform .35s cubic-bezier(.4,0,.2,1);
-    z-index:10;
-  }
-  .sidebar-header{
-    padding:24px 20px 16px;
-    display:flex;
-    align-items:center;
-    gap:12px;
-    border-bottom:1px solid var(--border);
-  }
-  .logo{
-    width:38px;
-    height:38px;
-    border-radius:10px;
-    background:linear-gradient(135deg, var(--accent), var(--accent2));
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-weight:800;
-    font-size:14px;
-    box-shadow:0 4px 14px rgba(255,59,59,0.35);
-    flex-shrink:0;
-  }
-  .brand h1{
-    font-size:16px;
-    margin:0;
-    letter-spacing:.3px;
-  }
-  .brand span{
-    font-size:12px;
-    color:var(--muted);
-  }
-
-  .playlist{
-    flex:1;
-    overflow-y:auto;
-    padding:14px 12px;
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-  }
-  .playlist::-webkit-scrollbar{width:6px;}
-  .playlist::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.12); border-radius:6px;}
-
-  .channel{
-    display:flex;
-    align-items:center;
-    gap:14px;
-    padding:12px 14px;
-    border-radius:14px;
-    background:rgba(255,255,255,0.02);
-    border:1px solid transparent;
-    cursor:pointer;
-    transition:background .25s ease, transform .2s ease, border-color .25s ease;
-    position:relative;
-    overflow:hidden;
-  }
-  .channel:hover{
-    background:rgba(255,255,255,0.05);
-    transform:translateX(2px);
-  }
-  .channel.active{
-    background:linear-gradient(90deg, rgba(255,59,59,0.18), rgba(255,122,59,0.06));
-    border-color:rgba(255,59,59,0.4);
-  }
-  .channel.active::before{
-    content:"";
-    position:absolute;
-    left:0;top:0;bottom:0;
-    width:4px;
-    background:linear-gradient(180deg, var(--accent), var(--accent2));
-    border-radius:0 4px 4px 0;
-  }
-  .ch-icon{
-    width:42px;
-    height:42px;
-    border-radius:10px;
-    background:#1f2330;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-weight:700;
-    font-size:13px;
-    color:#cfd3dd;
-    flex-shrink:0;
-    transition:transform .3s ease;
-  }
-  .channel.active .ch-icon{
-    background:linear-gradient(135deg, var(--accent), var(--accent2));
-    color:#fff;
-    transform:scale(1.05);
-  }
-  .ch-info{display:flex; flex-direction:column; gap:2px; min-width:0;}
-  .ch-name{font-size:14px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .ch-sub{font-size:11px; color:var(--muted);}
-
-  .live-dot{
-    margin-left:auto;
-    width:8px;height:8px;
-    border-radius:50%;
-    background:#3ddc84;
-    box-shadow:0 0 8px #3ddc84;
-    opacity:0;
-    transition:opacity .25s ease;
-    flex-shrink:0;
-  }
-  .channel.active .live-dot{opacity:1; animation:pulse 1.6s infinite;}
-  @keyframes pulse{
-    0%{box-shadow:0 0 0 0 rgba(61,220,132,.6);}
-    70%{box-shadow:0 0 0 8px rgba(61,220,132,0);}
-    100%{box-shadow:0 0 0 0 rgba(61,220,132,0);}
-  }
-
-  .sidebar-footer{
-    padding:14px 18px;
-    font-size:11px;
-    color:var(--muted);
-    border-top:1px solid var(--border);
-  }
-
-  /* Main */
-  .main{
-    flex:1;
-    display:flex;
-    flex-direction:column;
-    position:relative;
-  }
-  .topbar{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:18px 26px;
-    border-bottom:1px solid var(--border);
-    background:rgba(18,21,28,0.6);
-    backdrop-filter:blur(8px);
-  }
-  .now-playing{
-    display:flex;
-    align-items:center;
-    gap:12px;
-  }
-  .now-playing h2{
-    margin:0;
-    font-size:18px;
-    font-weight:700;
-  }
-  .badge{
-    font-size:11px;
-    padding:4px 10px;
-    border-radius:20px;
-    background:rgba(255,59,59,0.15);
-    color:var(--accent);
-    border:1px solid rgba(255,59,59,0.3);
-    font-weight:600;
-    letter-spacing:.5px;
-  }
-  .menu-btn{
-    display:none;
-    width:38px;height:38px;
-    border-radius:10px;
-    border:1px solid var(--border);
-    background:rgba(255,255,255,0.04);
-    color:var(--text);
-    align-items:center;
-    justify-content:center;
-    cursor:pointer;
-    font-size:18px;
-  }
-
-  .controls{
-    display:flex;
-    gap:10px;
-  }
-  .icon-btn{
-    width:38px;height:38px;
-    border-radius:10px;
-    border:1px solid var(--border);
-    background:rgba(255,255,255,0.04);
-    color:var(--text);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    cursor:pointer;
-    transition:background .2s ease, transform .2s ease;
-    font-size:15px;
-  }
-  .icon-btn:hover{
-    background:rgba(255,255,255,0.1);
-    transform:translateY(-1px);
-  }
-
-  .player-wrap{
-    flex:1;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    padding:26px;
-    position:relative;
-  }
-  .player-frame{
-    width:100%;
-    height:100%;
-    max-width:1400px;
-    border-radius:18px;
-    overflow:hidden;
-    background:#000;
-    box-shadow:0 20px 60px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.05);
-    position:relative;
-    opacity:0;
-    transform:scale(.985);
-    transition:opacity .45s ease, transform .45s ease;
-  }
-  .player-frame.show{
-    opacity:1;
-    transform:scale(1);
-  }
-  .player-frame iframe{
-    width:100%;
-    height:100%;
-    border:0;
-    display:block;
-  }
-
-  .loading-overlay{
-    position:absolute;
-    inset:0;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    background:#05060a;
-    transition:opacity .35s ease;
-    z-index:5;
-  }
-  .loading-overlay.hidden{
-    opacity:0;
-    pointer-events:none;
-  }
-  .spinner{
-    width:46px;height:46px;
-    border-radius:50%;
-    border:3px solid rgba(255,255,255,0.1);
-    border-top-color:var(--accent);
-    animation:spin 0.9s linear infinite;
-  }
-  @keyframes spin{to{transform:rotate(360deg);}}
-
-  .overlay{
-    display:none;
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,0.5);
-    z-index:9;
-  }
-
-  @media (max-width: 860px){
-    .sidebar{
-      position:fixed;
-      top:0; left:0; bottom:0;
-      transform:translateX(-100%);
-      box-shadow:10px 0 40px rgba(0,0,0,.5);
-    }
-    .sidebar.open{transform:translateX(0);}
-    .menu-btn{display:flex;}
-    .overlay.show{display:block;}
-    .player-wrap{padding:14px;}
-    .player-frame{border-radius:12px;}
-    .topbar{padding:14px 16px;}
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { width:100%; height:100%; background:#000; color:var(--text); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  .bg-glow { position:fixed; top:-200px; left:-200px; width:600px; height:600px; background:radial-gradient(circle,rgba(255,59,48,0.12) 0%,transparent 70%); pointer-events:none; z-index:0; }
+  .app { display:flex; height:100dvh; width:100dvw; position:relative; z-index:1; }
+  .sidebar { width:300px; min-width:260px; background:rgba(10,10,12,0.85); backdrop-filter:blur(40px) saturate(180%); -webkit-backdrop-filter:blur(40px) saturate(180%); border-right:1px solid var(--glass-border); display:flex; flex-direction:column; transition:transform .38s cubic-bezier(.4,0,.2,1); z-index:20; flex-shrink:0; }
+  .back-link { display:flex; align-items:center; gap:6px; padding:14px 18px; border-bottom:1px solid var(--glass-border); color:var(--muted); font-size:13px; text-decoration:none; transition:color .2s; }
+  .back-link:hover { color:var(--text); }
+  .back-arrow { width:26px; height:26px; border-radius:8px; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.14); display:flex; align-items:center; justify-content:center; font-size:12px; }
+  .sidebar-header { padding:18px 18px 14px; display:flex; align-items:center; gap:12px; border-bottom:1px solid var(--glass-border); }
+  .logo-pill { width:40px; height:40px; border-radius:12px; background:linear-gradient(145deg,rgba(255,59,48,0.6),rgba(255,59,48,0.25)); border:1px solid rgba(255,59,48,0.4); box-shadow:0 4px 16px rgba(255,59,48,0.3),inset 0 1px 0 rgba(255,255,255,0.25); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+  .brand-info h1 { font-size:15px; font-weight:600; }
+  .brand-info span { font-size:11px; color:var(--muted); }
+  .playlist { flex:1; overflow-y:auto; padding:12px 10px; display:flex; flex-direction:column; gap:6px; scrollbar-width:thin; scrollbar-color:rgba(255,255,255,0.1) transparent; }
+  .playlist::-webkit-scrollbar { width:4px; }
+  .playlist::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:4px; }
+  .channel { display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:16px; background:rgba(255,255,255,0.03); border:1px solid transparent; cursor:pointer; transition:background .22s,transform .2s,border-color .22s; position:relative; overflow:hidden; }
+  .channel:hover { background:rgba(255,255,255,0.06); transform:translateX(3px); }
+  .channel.active { background:linear-gradient(105deg,rgba(255,59,48,0.18),rgba(255,59,48,0.06)); border-color:rgba(255,59,48,0.35); }
+  .channel.active .ch-badge { background:linear-gradient(135deg,rgba(255,59,48,0.8),rgba(255,100,60,0.6)); color:#fff; border-color:rgba(255,59,48,0.5); box-shadow:0 4px 12px rgba(255,59,48,0.35),inset 0 1px 0 rgba(255,255,255,0.3); }
+  .ch-badge { width:40px; height:40px; border-radius:11px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--muted); flex-shrink:0; transition:all .3s; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
+  .ch-info { display:flex; flex-direction:column; gap:2px; min-width:0; flex:1; }
+  .ch-name { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .ch-sub { font-size:11px; color:var(--muted); }
+  .live-dot { width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 6px var(--green); opacity:0; flex-shrink:0; transition:opacity .25s; }
+  .channel.active .live-dot { opacity:1; animation:pulse 1.8s infinite; }
+  @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(48,209,88,.6);}70%{box-shadow:0 0 0 7px rgba(48,209,88,0);}100%{box-shadow:0 0 0 0 rgba(48,209,88,0);} }
+  .sidebar-footer { padding:14px 18px; border-top:1px solid var(--glass-border); font-size:11px; color:var(--muted); }
+  .main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+  .topbar { display:flex; align-items:center; justify-content:space-between; padding:max(14px,env(safe-area-inset-top)) 20px 14px; background:rgba(10,10,12,0.7); backdrop-filter:blur(30px) saturate(160%); -webkit-backdrop-filter:blur(30px) saturate(160%); border-bottom:1px solid var(--glass-border); flex-shrink:0; }
+  .topbar-left { display:flex; align-items:center; gap:10px; }
+  .now-playing h2 { font-size:16px; font-weight:600; letter-spacing:-0.2px; }
+  .glass-btn { height:36px; border-radius:11px; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.15); box-shadow:0 2px 8px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.2); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); color:var(--text); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .2s,transform .15s; font-size:15px; padding:0; width:36px; }
+  .glass-btn:hover { background:rgba(255,255,255,0.12); }
+  .glass-btn:active { transform:scale(0.95); }
+  .menu-btn { display:none; }
+  .live-badge { font-size:10px; font-weight:700; letter-spacing:0.8px; padding:4px 10px; border-radius:20px; background:rgba(255,59,48,0.15); color:#ff6b6b; border:1px solid rgba(255,59,48,0.35); }
+  .controls { display:flex; gap:8px; }
+  .player-wrap { flex:1; display:flex; align-items:center; justify-content:center; padding:20px; background:radial-gradient(ellipse at center,#0a0a0f 0%,#000 80%); }
+  .player-frame { width:100%; height:100%; max-width:1500px; border-radius:18px; overflow:hidden; background:#000; box-shadow:0 25px 80px rgba(0,0,0,0.7),0 0 0 1px rgba(255,255,255,0.06); position:relative; opacity:0; transform:scale(.985); transition:opacity .45s,transform .45s; }
+  .player-frame.show { opacity:1; transform:scale(1); }
+  .player-frame iframe { width:100%; height:100%; border:0; display:block; }
+  .loading-overlay { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:16px; background:rgba(5,5,8,0.95); z-index:5; transition:opacity .35s; }
+  .loading-overlay.hidden { opacity:0; pointer-events:none; }
+  .spinner-ring { width:48px; height:48px; border-radius:50%; border:2.5px solid rgba(255,255,255,0.08); border-top-color:var(--accent); animation:spin .85s linear infinite; box-shadow:0 0 20px var(--accent-glow); }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .loading-text { font-size:12px; color:var(--muted); }
+  .backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); z-index:15; }
+  @media (max-width:860px) {
+    .sidebar { position:fixed; top:0; left:0; bottom:0; transform:translateX(-100%); box-shadow:12px 0 50px rgba(0,0,0,.6); }
+    .sidebar.open { transform:translateX(0); }
+    .backdrop.show { display:block; }
+    .menu-btn { display:flex; }
+    .player-wrap { padding:12px; }
+    .player-frame { border-radius:14px; }
+    .topbar { padding:max(14px,env(safe-area-inset-top)) 14px 14px; }
   }
 </style>
 </head>
 <body>
-
+<div class="bg-glow"></div>
 <div class="app">
-
-  <div class="overlay" id="overlay"></div>
-
+  <div class="backdrop" id="backdrop"></div>
   <aside class="sidebar" id="sidebar">
-    <a href="home.html" style="color:var(--muted); text-decoration:none; font-size:13px; display:flex; align-items:center; gap:6px; padding:10px 18px; border-bottom:1px solid var(--border); transition:color .2s ease;">← Back to Home</a>
+    <a href="home.html" class="back-link"><div class="back-arrow">←</div>Back to Home</a>
     <div class="sidebar-header">
-      <div class="logo">bN</div>
-      <div class="brand">
-        <h1>beIN Sports</h1>
-        <span>Live Channel Playlist</span>
-      </div>
+      <div class="logo-pill">⚽</div>
+      <div class="brand-info"><h1>beIN Sport</h1><span>Live Channel Playlist</span></div>
     </div>
     <div class="playlist" id="playlist"></div>
-    <div class="sidebar-footer">4 channels · Streaming live</div>
+    <div class="sidebar-footer">9 channels · Streaming live</div>
   </aside>
-
   <main class="main">
     <div class="topbar">
-      <div style="display:flex; align-items:center; gap:14px;">
-        <button class="menu-btn" id="menuBtn">☰</button>
+      <div class="topbar-left">
+        <button class="glass-btn menu-btn" id="menuBtn">☰</button>
         <div class="now-playing">
-          <h2 id="channelTitle">beIN Sport Max 1</h2>
-          <span class="badge">LIVE</span>
+          <h2 id="channelTitle">beIN Sport 1</h2>
+          <span class="live-badge">LIVE</span>
         </div>
       </div>
       <div class="controls">
-        <button class="icon-btn" id="reloadBtn" title="Reload">⟳</button>
-        <button class="icon-btn" id="fullscreenBtn" title="Fullscreen">⛶</button>
+        <button class="glass-btn" id="reloadBtn" title="Reload">⟳</button>
+        <button class="glass-btn" id="fullscreenBtn" title="Fullscreen">⛶</button>
       </div>
     </div>
-
     <div class="player-wrap">
       <div class="player-frame" id="playerFrame">
         <div class="loading-overlay" id="loadingOverlay">
-          <div class="spinner"></div>
+          <div class="spinner-ring"></div>
+          <div class="loading-text">Loading stream…</div>
         </div>
-        <iframe id="videoIframe" src="" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture" sandbox="allow-scripts allow-same-origin allow-forms" referrerpolicy="no-referrer"></iframe>
+        <iframe id="videoIframe" src="" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture" sandbox="allow-scripts allow-same-origin allow-forms allow-popups-to-escape-sandbox" referrerpolicy="no-referrer"></iframe>
       </div>
     </div>
   </main>
-
 </div>
-
 <script>
-  // Block popups/popunders triggered indirectly from this page
-  window.open = function(){ console.warn('Popup blocked'); return null; };
+  window.open = function(url) { console.warn('Popup blocked:', url); return null; };
+  document.addEventListener('click', function(e) {
+    const a = e.target.closest('a');
+    if (a && a.target === '_blank') { e.preventDefault(); e.stopPropagation(); }
+  }, true);
 
   const channels = [
-    {
-      name: "beIN Sport 1",
-      sub: "Live Channel",
-      code: "BS1",
-      url: "https://ntv.cx/embed?t=OThTUzhFbk9WeExodUtsTmV0cFgxMVdndW5LbW9PbUtMa2NlM2UxS3VHTy9CWWFxS0dLUEdMRmhrMnpXWHdxTA~~"
-    },
-    {
-      name: "beIN Sport 2",
-      sub: "Live Channel",
-      code: "BS2",
-      url: "https://ntv.cx/embed?t=OThTUzhFbk9WeExodUtsTmV0cFgxLzltRnN6S3ludFB4alU4MGNEc1FURFkrYzhZaFhxazRKcm81WGswV0FsSg~~"
-    },
-    {
-      name: "beIN Sport 3",
-      sub: "Live Channel",
-      code: "BS3",
-      url: "https://ntv.cx/embed?t=OThTUzhFbk9WeExodUtsTmV0cFgxK3kxYWttMlBhbkJGYm1ZQ2lDRm5lL1Zkc1NxRXpEWGtwUUdkR3VCLzV4WA~~"
-    },
-    {
-      name: "beIN Sport 4",
-      sub: "Live Channel",
-      code: "BS4",
-      url: "https://ntv.cx/embed?t=OThTUzhFbk9WeExodUtsTmV0cFgxLzZHTTYwVVdHQjl1Um8xWVBUS3Y1cllVT0xtbnd1VjJDWUkxQU5LN2QwRQ~~"
-    }
-    ,
-    {
-      name: "beIN Sport 5",
-      sub: "Live Channel",
-      code: "BS4",
-      url: ":https://ntv.cx/embed?t=OThTUzhFbk9WeExodUtsTmV0cFgxMVY3U0lRaWlUUlJ6QmpPTDl4UnFuUlQ5RDM1OTRxc0EyWWxabUk2NTNEMw~~"
-    }
-    ,
-    {
-      name: "beIN Sport 6",
-      sub: "Live Channel",
-      code: "BS4",
-      url: " https://ntv.cx/embed?t=TVhpbmcyU0I1MVc3V3RtQm9STU1JRnllbnVSbkttVUtvZFcyNlNNSDJ3VnVMWjU4V3hHeDc3Mk5Nc2J5bjhLb3dzVCtPS1JBM2oxSW05UnkrdWM1dmpoZ09Wb1ZLRFhZbWc1SkxGclBydjREMFNKY2Y3anNuQXJHdlFqUitKM0xtb3o1a3ZLSTRiMndxVmJwMGNEYUNBPT0~"
-    },
-    {
-      name: "beIN Sport 7",
-      sub: "Live Channel",
-      code: "BS4",
-      url: "https://ntv.cx/embed?t=OThTUzhFbk9WeExodUtsTmV0cFgxK09YVVczMlBobEE4b0UrSUd4ZzNSS1YyZnVRWkphUWJMNkVsMGkvVFdpbw~~"
-    },
-    {
-      name: "beIN Sport 8",
-      sub: "Live Channel",
-      code: "BS4",
-      url: "https://ntv.cx/embed?t=TVhpbmcyU0I1MVc3V3RtQm9STU1JRnllbnVSbkttVUtvZFcyNlNNSDJ3VnVMWjU4V3hHeDc3Mk5Nc2J5bjhLb3dzVCtPS1JBM2oxSW05UnkrdWM1dmc4M0JpWlRiR2xNNURMQlRzTFMxL0ZlR05YR2VmUk1IQkNkMzF4dnp2TVErSWRoWXMzY1pwck9FN0RVNlpycEh3PT0~"
-    },
-    {
-      name: "beIN Sport 9",
-      sub: "Live Channel",
-      code: "BS4",
-      url: "https://ntv.cx/embed?t=OThTUzhFbk9WeExodUtsTmV0cFgxKzhnMTl0anluZGZpWjhiTmhTN0xpOFpHVnI4UTBxOXFmaXBIaHBRblpvYw~~"
-    },
-    
-    
+    { name:"beIN Sport 1", sub:"Live Channel", code:"BS1", url:"https://ntv.cx/embed?t=OThTUzhFbk9WeExodUtsTmV0cFgxMVdndW5LbW9PbUtMa2NlM2UxS3VHTy9CWWFxS0dLUEdMRmhrMnpXWHdxTA~~" },
+    { name:"beIN Sport 2", sub:"Live Channel", code:"BS2", url:"https://ntv.cx/embed?t=OThTUzhFbk9WeExodUtsTmV0cFgxLzltRnN6S3ludFB4alU4MGNEc1FURFkrYzhZaFhxazRKcm81WGswV0FsSg~~" },
+    { name:"beIN Sport 3", sub:"Live Channel", code:"BS3", url:"https://ntv.cx/embed?t=OThTUzhFbk9WeExodUtsTmV0cFgxK3kxYWttMlBhbkJGYm1ZQ2lDRm5lL1Zkc1NxRXpEWGtwUUdkR3VCLzV4WA~~" },
+    { name:"beIN Sport 4", sub:"Live Channel", code:"BS4", url:"https://ntv.cx/embed?t=OThTUzhFbk9WeExodUtsTmV0cFgxLzZHTTYwVVdHQjl1Um8xWVBUS3Y1cllVT0xtbnd1VjJDWUkxQU5LN2QwRQ~~" },
+    { name:"beIN Sport 5", sub:"Live Channel", code:"BS5", url:"https://ntv.cx/embed?t=OThTUzhFbk9WeExodUtsTmV0cFgxMVY3U0lRaWlUUlJ6QmpPTDl4UnFuUlQ5RDM1OTRxc0EyWWxabUk2NTNEMw~~" },
+    { name:"beIN Sport 6", sub:"Live Channel", code:"BS6", url:"https://ntv.cx/embed?t=TVhpbmcyU0I1MVc3V3RtQm9STU1JRnllbnVSbkttVUtvZFcyNlNNSDJ3VnVMWjU4V3hHeDc3Mk5Nc2J5bjhLb3dzVCtPS1JBM2oxSW05UnkrdWM1dmpoZ09Wb1ZLRFhZbWc1SkxGclBydjREMFNKY2Y3anNuQXJHdlFqUitKM0xtb3o1a3ZLSTRiMndxVmJwMGNEYUNBPT0~" },
+    { name:"beIN Sport 7", sub:"Live Channel", code:"BS7", url:"https://ntv.cx/embed?t=OThTUzhFbk9WeExodUtsTmV0cFgxK09YVVczMlBobEE4b0UrSUd4ZzNSS1YyZnVRWkphUWJMNkVsMGkvVFdpbw~~" },
+    { name:"beIN Sport 8", sub:"Live Channel", code:"BS8", url:"https://ntv.cx/embed?t=TVhpbmcyU0I1MVc3V3RtQm9STU1JRnllbnVSbkttVUtvZFcyNlNNSDJ3VnVMWjU4V3hHeDc3Mk5Nc2J5bjhLb3dzVCtPS1JBM2oxSW05UnkrdWM1dmc4M0JpWlRiR2xNNURMQlRzTFMxL0ZlR05YR2VmUk1IQkNkMzF4dnp2TVErSWRoWXMzY1pwck9FN0RVNlpycEh3PT0~" },
+    { name:"beIN Sport 9", sub:"Live Channel", code:"BS9", url:"https://ntv.cx/embed?t=OThTUzhFbk9WeExodUtsTmV0cFgxKzhnMTl0anluZGZpWjhiTmhTN0xpOFpHVnI4UTBxOXFmaXBIaHBRblpvYw~~" },
   ];
 
   const playlistEl = document.getElementById('playlist');
   const iframe = document.getElementById('videoIframe');
-  const playerFrame = document.getElementById('playerFrame');
-  const loadingOverlay = document.getElementById('loadingOverlay');
-  const channelTitle = document.getElementById('channelTitle');
+  const frame = document.getElementById('playerFrame');
+  const loading = document.getElementById('loadingOverlay');
+  const titleEl = document.getElementById('channelTitle');
   const sidebar = document.getElementById('sidebar');
-  const overlay = document.getElementById('overlay');
+  const backdrop = document.getElementById('backdrop');
+  let active = 0;
 
-  let activeIndex = 0;
-
-  function renderPlaylist(){
+  function render() {
     playlistEl.innerHTML = '';
     channels.forEach((ch, i) => {
-      const div = document.createElement('div');
-      div.className = 'channel' + (i === activeIndex ? ' active' : '');
-      div.innerHTML = `
-        <div class="ch-icon">${ch.code}</div>
-        <div class="ch-info">
-          <div class="ch-name">${ch.name}</div>
-          <div class="ch-sub">${ch.sub}</div>
-        </div>
-        <div class="live-dot"></div>
-      `;
-      div.addEventListener('click', () => selectChannel(i));
-      playlistEl.appendChild(div);
+      const el = document.createElement('div');
+      el.className = 'channel' + (i===active?' active':'');
+      el.innerHTML = `<div class="ch-badge">${ch.code}</div><div class="ch-info"><div class="ch-name">${ch.name}</div><div class="ch-sub">${ch.sub}</div></div><div class="live-dot"></div>`;
+      el.addEventListener('click', () => pick(i));
+      playlistEl.appendChild(el);
     });
   }
-
-  function selectChannel(i){
-    if(i === activeIndex && iframe.src) { loadChannel(i); return; }
-    activeIndex = i;
-    renderPlaylist();
-    loadChannel(i);
-    if(window.innerWidth <= 860){ closeSidebar(); }
-  }
-
-  function loadChannel(i){
-    const ch = channels[i];
-    channelTitle.textContent = ch.name;
-    loadingOverlay.classList.remove('hidden');
-    playerFrame.classList.remove('show');
+  function pick(i) { active=i; render(); load(i); if(window.innerWidth<=860) closeSidebar(); }
+  function load(i) {
+    titleEl.textContent = channels[i].name;
+    loading.classList.remove('hidden');
+    frame.classList.remove('show');
     iframe.src = 'about:blank';
-    setTimeout(() => {
-      iframe.src = ch.url;
-    }, 150);
+    setTimeout(() => { iframe.src = channels[i].url.trim(); }, 160);
   }
-
   iframe.addEventListener('load', () => {
-    if(iframe.src === 'about:blank') return;
-    setTimeout(() => {
-      loadingOverlay.classList.add('hidden');
-      playerFrame.classList.add('show');
-    }, 300);
+    if (iframe.src==='about:blank') return;
+    setTimeout(() => { loading.classList.add('hidden'); frame.classList.add('show'); }, 300);
   });
-
-  document.getElementById('reloadBtn').addEventListener('click', () => loadChannel(activeIndex));
-  document.getElementById('fullscreenBtn').addEventListener('click', () => {
-    if(playerFrame.requestFullscreen) playerFrame.requestFullscreen();
-  });
-
-  function openSidebar(){ sidebar.classList.add('open'); overlay.classList.add('show'); }
-  function closeSidebar(){ sidebar.classList.remove('open'); overlay.classList.remove('show'); }
-
-  document.getElementById('menuBtn').addEventListener('click', () => {
-    sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
-  });
-  overlay.addEventListener('click', closeSidebar);
-
-  renderPlaylist();
-  loadChannel(activeIndex);
+  document.getElementById('reloadBtn').addEventListener('click', () => load(active));
+  document.getElementById('fullscreenBtn').addEventListener('click', () => { const el=document.documentElement; if(el.requestFullscreen)el.requestFullscreen(); else if(el.webkitRequestFullscreen)el.webkitRequestFullscreen(); });
+  function openSidebar()  { sidebar.classList.add('open'); backdrop.classList.add('show'); }
+  function closeSidebar() { sidebar.classList.remove('open'); backdrop.classList.remove('show'); }
+  document.getElementById('menuBtn').addEventListener('click', () => sidebar.classList.contains('open')?closeSidebar():openSidebar());
+  backdrop.addEventListener('click', closeSidebar);
+  render(); load(active);
 </script>
-
 </body>
 </html>

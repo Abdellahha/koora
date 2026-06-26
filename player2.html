@@ -2,462 +2,166 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Other Channels Player</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Koora Live">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#000000">
+<link rel="manifest" href="manifest.json">
+<title>World Cup 2026</title>
 <style>
-  :root{
-    --bg:#0b0d12;
-    --panel:#12151c;
-    --panel2:#181c25;
-    --accent:#3b82ff;
-    --accent2:#3bffd0;
-    --text:#eef0f4;
-    --muted:#8a90a0;
-    --border:rgba(255,255,255,0.07);
+  :root {
+    --glass: rgba(255,255,255,0.08);
+    --glass-border: rgba(255,255,255,0.16);
+    --text: #fff;
+    --muted: rgba(255,255,255,0.5);
+    --blue: #0a84ff;
+    --blue-glow: rgba(10,132,255,0.35);
+    --green: #30d158;
   }
-  *{box-sizing:border-box;}
-  html,body{
-    margin:0;
-    height:100%;
-    background:radial-gradient(circle at 20% -10%, #1a1f2b 0%, var(--bg) 55%);
-    color:var(--text);
-    font-family:'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    overflow:hidden;
-  }
-  .app{ display:flex; height:100vh; width:100vw; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width:100%; height:100%; background:#000; color:var(--text); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
 
-  .sidebar{
-    width:320px;
-    min-width:260px;
-    background:linear-gradient(180deg, var(--panel) 0%, var(--panel2) 100%);
-    border-right:1px solid var(--border);
-    display:flex;
-    flex-direction:column;
-    transition:transform .35s cubic-bezier(.4,0,.2,1);
-    z-index:10;
-  }
-  .sidebar-header{
-    padding:24px 20px 16px;
-    display:flex;
-    align-items:center;
-    gap:12px;
-    border-bottom:1px solid var(--border);
-  }
-  .back-link{
-    color:var(--muted);
-    text-decoration:none;
-    font-size:13px;
-    display:flex;
-    align-items:center;
-    gap:6px;
-    padding:10px 18px;
-    border-bottom:1px solid var(--border);
-    transition:color .2s ease;
-  }
-  .back-link:hover{ color:var(--text); }
-  .logo{
-    width:38px;
-    height:38px;
-    border-radius:10px;
-    background:linear-gradient(135deg, var(--accent), var(--accent2));
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-weight:800;
-    font-size:14px;
-    box-shadow:0 4px 14px rgba(59,130,255,0.35);
-    flex-shrink:0;
-  }
-  .brand h1{ font-size:16px; margin:0; letter-spacing:.3px; }
-  .brand span{ font-size:12px; color:var(--muted); }
+  .bg-glow { position:fixed; top:-200px; right:-100px; width:600px; height:600px; background:radial-gradient(circle, rgba(10,132,255,0.12) 0%, transparent 70%); pointer-events:none; z-index:0; }
 
-  .playlist{
-    flex:1;
-    overflow-y:auto;
-    padding:14px 12px;
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-  }
-  .playlist::-webkit-scrollbar{ width:6px; }
-  .playlist::-webkit-scrollbar-thumb{ background:rgba(255,255,255,0.12); border-radius:6px; }
+  .app { display:flex; height:100dvh; width:100dvw; position:relative; z-index:1; }
 
-  .empty-state{
-    margin:auto;
-    text-align:center;
-    color:var(--muted);
-    padding:30px;
-    font-size:13px;
-  }
-  .empty-state .ico{ font-size:34px; margin-bottom:10px; }
+  .sidebar { width:300px; min-width:260px; background:rgba(10,10,12,0.85); backdrop-filter:blur(40px) saturate(180%); -webkit-backdrop-filter:blur(40px) saturate(180%); border-right:1px solid var(--glass-border); display:flex; flex-direction:column; transition:transform .38s cubic-bezier(.4,0,.2,1); z-index:20; flex-shrink:0; }
 
-  .channel{
-    display:flex;
-    align-items:center;
-    gap:14px;
-    padding:12px 14px;
-    border-radius:14px;
-    background:rgba(255,255,255,0.02);
-    border:1px solid transparent;
-    cursor:pointer;
-    transition:background .25s ease, transform .2s ease, border-color .25s ease;
-    position:relative;
-    overflow:hidden;
-  }
-  .channel:hover{ background:rgba(255,255,255,0.05); transform:translateX(2px); }
-  .channel.active{
-    background:linear-gradient(90deg, rgba(59,130,255,0.18), rgba(59,255,208,0.06));
-    border-color:rgba(59,130,255,0.4);
-  }
-  .channel.active::before{
-    content:"";
-    position:absolute;
-    left:0;top:0;bottom:0;
-    width:4px;
-    background:linear-gradient(180deg, var(--accent), var(--accent2));
-    border-radius:0 4px 4px 0;
-  }
-  .ch-icon{
-    width:42px;height:42px;
-    border-radius:10px;
-    background:#1f2330;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-weight:700;
-    font-size:13px;
-    color:#cfd3dd;
-    flex-shrink:0;
-    transition:transform .3s ease;
-  }
-  .channel.active .ch-icon{
-    background:linear-gradient(135deg, var(--accent), var(--accent2));
-    color:#06121f;
-    transform:scale(1.05);
-  }
-  .ch-info{ display:flex; flex-direction:column; gap:2px; min-width:0; }
-  .ch-name{ font-size:14px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .ch-sub{ font-size:11px; color:var(--muted); }
-  .live-dot{
-    margin-left:auto;
-    width:8px;height:8px;
-    border-radius:50%;
-    background:#3ddc84;
-    box-shadow:0 0 8px #3ddc84;
-    opacity:0;
-    transition:opacity .25s ease;
-    flex-shrink:0;
-  }
-  .channel.active .live-dot{ opacity:1; animation:pulse 1.6s infinite; }
-  @keyframes pulse{
-    0%{box-shadow:0 0 0 0 rgba(61,220,132,.6);}
-    70%{box-shadow:0 0 0 8px rgba(61,220,132,0);}
-    100%{box-shadow:0 0 0 0 rgba(61,220,132,0);}
-  }
+  .back-link { display:flex; align-items:center; gap:6px; padding:14px 18px; border-bottom:1px solid var(--glass-border); color:var(--muted); font-size:13px; text-decoration:none; transition:color .2s; }
+  .back-link:hover { color:var(--text); }
+  .back-arrow { width:26px; height:26px; border-radius:8px; background:var(--glass); border:1px solid var(--glass-border); display:flex; align-items:center; justify-content:center; font-size:12px; }
 
-  .main{ flex:1; display:flex; flex-direction:column; position:relative; }
-  .topbar{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:18px 26px;
-    border-bottom:1px solid var(--border);
-    background:rgba(18,21,28,0.6);
-    backdrop-filter:blur(8px);
-  }
-  .now-playing{ display:flex; align-items:center; gap:12px; }
-  .now-playing h2{ margin:0; font-size:18px; font-weight:700; }
-  .badge{
-    font-size:11px;
-    padding:4px 10px;
-    border-radius:20px;
-    background:rgba(59,130,255,0.15);
-    color:var(--accent);
-    border:1px solid rgba(59,130,255,0.3);
-    font-weight:600;
-    letter-spacing:.5px;
-  }
-  .menu-btn{
-    display:none;
-    width:38px;height:38px;
-    border-radius:10px;
-    border:1px solid var(--border);
-    background:rgba(255,255,255,0.04);
-    color:var(--text);
-    align-items:center;
-    justify-content:center;
-    cursor:pointer;
-    font-size:18px;
-  }
-  .controls{ display:flex; gap:10px; }
-  .icon-btn{
-    width:38px;height:38px;
-    border-radius:10px;
-    border:1px solid var(--border);
-    background:rgba(255,255,255,0.04);
-    color:var(--text);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    cursor:pointer;
-    transition:background .2s ease, transform .2s ease;
-    font-size:15px;
-  }
-  .icon-btn:hover{ background:rgba(255,255,255,0.1); transform:translateY(-1px); }
+  .sidebar-header { padding:18px 18px 14px; display:flex; align-items:center; gap:12px; border-bottom:1px solid var(--glass-border); }
+  .logo-pill { width:40px; height:40px; border-radius:12px; background:linear-gradient(145deg,rgba(10,132,255,0.6),rgba(10,132,255,0.25)); border:1px solid rgba(10,132,255,0.4); box-shadow:0 4px 16px rgba(10,132,255,0.3),inset 0 1px 0 rgba(255,255,255,0.25); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+  .brand-info h1 { font-size:15px; font-weight:600; }
+  .brand-info span { font-size:11px; color:var(--muted); }
 
-  .player-wrap{
-    flex:1;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    padding:26px;
-    position:relative;
-  }
-  .player-frame{
-    width:100%;
-    height:100%;
-    max-width:1400px;
-    border-radius:18px;
-    overflow:hidden;
-    background:#000;
-    box-shadow:0 20px 60px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.05);
-    position:relative;
-    opacity:0;
-    transform:scale(.985);
-    transition:opacity .45s ease, transform .45s ease;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-  }
-  .player-frame.show{ opacity:1; transform:scale(1); }
-  .player-frame iframe{ width:100%; height:100%; border:0; display:block; }
-  .placeholder-msg{
-    text-align:center;
-    color:var(--muted);
-    padding:40px;
-  }
-  .placeholder-msg .ico{ font-size:46px; margin-bottom:14px; }
+  /* Matchup picker inside sidebar */
+  .match-picker { padding:14px 12px; border-bottom:1px solid var(--glass-border); display:flex; flex-direction:column; gap:10px; }
+  .picker-label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.6px; font-weight:600; }
 
-  .loading-overlay{
-    position:absolute;
-    inset:0;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    background:#05060a;
-    transition:opacity .35s ease;
-    z-index:5;
-  }
-  .loading-overlay.hidden{ opacity:0; pointer-events:none; }
-  .spinner{
-    width:46px;height:46px;
-    border-radius:50%;
-    border:3px solid rgba(255,255,255,0.1);
-    border-top-color:var(--accent);
-    animation:spin 0.9s linear infinite;
-  }
-  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .team-row { display:flex; align-items:center; gap:8px; }
+  .vs-text { font-size:12px; color:var(--muted); font-weight:700; flex-shrink:0; }
 
-  .overlay{ display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9; }
+  .team-selector { position:relative; flex:1; }
+  .team-selector label { font-size:10px; color:var(--muted); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px; }
 
-  /* ── Matchup Selector ── */
-  .matchup-bar{
-    padding:18px 26px 0;
-    display:flex;
-    flex-direction:column;
-    gap:12px;
-  }
-  .matchup-label{
-    font-size:11px;
-    letter-spacing:.8px;
-    color:var(--muted);
-    text-transform:uppercase;
-    font-weight:600;
-  }
-  .matchup-row{
-    display:flex;
-    align-items:center;
-    gap:14px;
-  }
-  .team-selector{
-    flex:1;
-    position:relative;
-  }
-  .team-selector label{
-    display:block;
-    font-size:10px;
-    color:var(--muted);
-    text-transform:uppercase;
-    letter-spacing:.6px;
-    margin-bottom:5px;
-    font-weight:600;
-  }
-  .team-btn{
-    width:100%;
-    background:rgba(255,255,255,0.04);
-    border:1px solid var(--border);
-    border-radius:12px;
-    padding:10px 16px;
-    color:var(--text);
-    font-size:14px;
-    font-weight:600;
-    cursor:pointer;
-    display:flex;
-    align-items:center;
-    gap:10px;
-    transition:background .2s, border-color .2s;
+  .team-btn {
+    width:100%; padding:9px 10px; border-radius:12px;
+    background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.1), 0 2px 8px rgba(0,0,0,0.3);
+    backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+    color:var(--text); cursor:pointer; display:flex; align-items:center; gap:7px;
+    font-size:12px; font-family:inherit; transition:background .2s, border-color .2s;
     text-align:left;
   }
-  .team-btn:hover{ background:rgba(255,255,255,0.08); border-color:rgba(59,130,255,0.4); }
-  .team-btn .flag{ font-size:20px; flex-shrink:0; }
-  .team-btn .name{ flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .team-btn .arrow{ color:var(--muted); font-size:11px; flex-shrink:0; }
+  .team-btn:hover { background:rgba(255,255,255,0.1); border-color:rgba(255,255,255,0.22); }
+  .team-btn .flag { font-size:16px; flex-shrink:0; }
+  .team-btn .tname { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .team-btn .arrow { font-size:10px; color:var(--muted); margin-left:auto; flex-shrink:0; transition:transform .2s; }
 
-  .vs-badge{
-    font-size:13px;
-    font-weight:800;
-    color:var(--muted);
-    padding:8px 6px 0;
-    flex-shrink:0;
-    letter-spacing:1px;
+  .team-dropdown {
+    position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:100;
+    background:rgba(18,18,22,0.96); backdrop-filter:blur(30px) saturate(180%); -webkit-backdrop-filter:blur(30px) saturate(180%);
+    border:1px solid rgba(255,255,255,0.14); border-radius:14px;
+    box-shadow:0 16px 50px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.12);
+    overflow:hidden; display:none;
   }
-  .watch-btn{
-    background:linear-gradient(135deg, var(--accent), var(--accent2));
-    border:none;
-    border-radius:12px;
-    padding:10px 22px;
-    color:#06121f;
-    font-size:14px;
-    font-weight:700;
-    cursor:pointer;
-    transition:opacity .2s, transform .2s;
-    white-space:nowrap;
-    align-self:flex-end;
-    margin-bottom:0;
-  }
-  .watch-btn:hover{ opacity:.88; transform:translateY(-1px); }
-  .watch-btn:disabled{ opacity:.4; cursor:not-allowed; transform:none; }
+  .team-dropdown.open { display:block; }
+  .dd-search { padding:10px 10px 6px; }
+  .dd-search input { width:100%; padding:7px 10px; border-radius:9px; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); color:var(--text); font-size:12px; font-family:inherit; outline:none; }
+  .dd-search input::placeholder { color:var(--muted); }
+  .dd-list { max-height:180px; overflow-y:auto; padding:4px 6px 8px; }
+  .dd-list::-webkit-scrollbar { width:3px; }
+  .dd-list::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:3px; }
+  .dd-item { display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:9px; cursor:pointer; font-size:12px; transition:background .15s; }
+  .dd-item:hover, .dd-item.selected { background:rgba(10,132,255,0.18); }
+  .dd-item .flag { font-size:15px; }
 
-  /* Dropdown */
-  .team-dropdown{
-    position:absolute;
-    top:calc(100% + 6px);
-    left:0;
-    width:100%;
-    min-width:220px;
-    background:#1a1e2b;
-    border:1px solid rgba(255,255,255,0.12);
-    border-radius:14px;
-    z-index:100;
-    overflow:hidden;
-    box-shadow:0 12px 40px rgba(0,0,0,0.6);
-    display:none;
-    flex-direction:column;
+  .watch-btn {
+    width:100%; padding:11px; border-radius:13px;
+    background:linear-gradient(145deg, rgba(10,132,255,0.7), rgba(10,132,255,0.4));
+    border:1px solid rgba(10,132,255,0.5);
+    box-shadow:0 6px 20px rgba(10,132,255,0.3), inset 0 1px 0 rgba(255,255,255,0.25);
+    color:#fff; font-size:13px; font-weight:600; font-family:inherit;
+    cursor:pointer; transition:all .2s; letter-spacing:-0.1px;
   }
-  .team-dropdown.open{ display:flex; }
-  .dd-search{
-    padding:10px 14px;
-    border-bottom:1px solid rgba(255,255,255,0.07);
-    flex-shrink:0;
-  }
-  .dd-search input{
-    width:100%;
-    background:rgba(255,255,255,0.06);
-    border:1px solid rgba(255,255,255,0.1);
-    border-radius:8px;
-    padding:7px 12px;
-    color:var(--text);
-    font-size:13px;
-    outline:none;
-  }
-  .dd-search input::placeholder{ color:var(--muted); }
-  .dd-list{
-    overflow-y:auto;
-    max-height:280px;
-    padding:6px;
-  }
-  .dd-list::-webkit-scrollbar{ width:5px; }
-  .dd-list::-webkit-scrollbar-thumb{ background:rgba(255,255,255,0.1); border-radius:5px; }
-  .dd-item{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    padding:9px 12px;
-    border-radius:9px;
-    cursor:pointer;
-    font-size:13px;
-    transition:background .15s;
-  }
-  .dd-item:hover{ background:rgba(255,255,255,0.07); }
-  .dd-item.selected{ background:rgba(59,130,255,0.15); color:var(--accent); }
-  .dd-item .flag{ font-size:18px; }
+  .watch-btn:disabled { opacity:0.35; cursor:not-allowed; }
+  .watch-btn:not(:disabled):hover { background:linear-gradient(145deg,rgba(10,132,255,0.85),rgba(10,132,255,0.55)); transform:translateY(-1px); box-shadow:0 10px 28px rgba(10,132,255,0.4); }
+  .watch-btn:active { transform:scale(0.97); }
 
-  .matchup-divider{
-    height:1px;
-    background:var(--border);
-    margin:14px 26px 0;
-  }
+  .playlist { flex:1; overflow-y:auto; padding:12px 10px; display:flex; flex-direction:column; gap:6px; scrollbar-width:thin; scrollbar-color:rgba(255,255,255,0.1) transparent; }
+  .playlist::-webkit-scrollbar { width:4px; }
+  .playlist::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:4px; }
 
-  @media (max-width: 860px){
-    .matchup-bar{ padding:14px 14px 0; }
-    .matchup-row{ flex-wrap:wrap; gap:10px; }
-    .matchup-divider{ margin:14px 14px 0; }
-    .watch-btn{ width:100%; text-align:center; justify-content:center; }
-  }
+  .empty-state { text-align:center; padding:30px 16px; color:var(--muted); font-size:13px; line-height:1.6; }
+  .empty-state .ico { font-size:32px; margin-bottom:10px; }
 
-  @media (max-width: 860px){
-    .sidebar{ position:fixed; top:0; left:0; bottom:0; transform:translateX(-100%); box-shadow:10px 0 40px rgba(0,0,0,.5); }
-    .sidebar.open{ transform:translateX(0); }
-    .menu-btn{ display:flex; }
-    .overlay.show{ display:block; }
-    .player-wrap{ padding:14px; }
-    .player-frame{ border-radius:12px; }
-    .topbar{ padding:14px 16px; }
+  .sidebar-footer { padding:14px 18px; border-top:1px solid var(--glass-border); font-size:11px; color:var(--muted); }
+
+  .main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+
+  .topbar { display:flex; align-items:center; justify-content:space-between; padding:max(14px,env(safe-area-inset-top)) 20px 14px; background:rgba(10,10,12,0.7); backdrop-filter:blur(30px) saturate(160%); -webkit-backdrop-filter:blur(30px) saturate(160%); border-bottom:1px solid var(--glass-border); flex-shrink:0; }
+  .topbar-left { display:flex; align-items:center; gap:10px; }
+  .now-playing h2 { font-size:16px; font-weight:600; letter-spacing:-0.2px; }
+
+  .glass-btn { height:36px; border-radius:11px; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.15); box-shadow:0 2px 8px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.2); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); color:var(--text); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .2s,transform .15s; font-size:15px; padding:0 12px; gap:6px; white-space:nowrap; }
+  .glass-btn.icon-only { width:36px; padding:0; }
+  .glass-btn:hover { background:rgba(255,255,255,0.12); }
+  .glass-btn:active { transform:scale(0.95); }
+  .menu-btn { display:none; }
+
+  .live-badge { font-size:10px; font-weight:700; letter-spacing:0.8px; padding:4px 10px; border-radius:20px; background:rgba(10,132,255,0.15); color:#6bb5ff; border:1px solid rgba(10,132,255,0.35); }
+  .controls { display:flex; gap:8px; }
+
+  .player-wrap { flex:1; display:flex; align-items:center; justify-content:center; padding:20px; background:radial-gradient(ellipse at center,#0a0a0f 0%,#000 80%); position:relative; }
+  .player-frame { width:100%; height:100%; max-width:1500px; border-radius:18px; overflow:hidden; background:#000; box-shadow:0 25px 80px rgba(0,0,0,0.7),0 0 0 1px rgba(255,255,255,0.06); position:relative; opacity:0; transform:scale(.985); transition:opacity .45s,transform .45s; }
+  .player-frame.show { opacity:1; transform:scale(1); }
+  .player-frame iframe { width:100%; height:100%; border:0; display:block; }
+
+  .placeholder-msg { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; color:var(--muted); font-size:14px; text-align:center; padding:20px; }
+  .placeholder-msg .ico { font-size:40px; }
+
+  .loading-overlay { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:16px; background:rgba(5,5,8,0.95); backdrop-filter:blur(20px); z-index:5; transition:opacity .35s; }
+  .loading-overlay.hidden { opacity:0; pointer-events:none; }
+  .spinner-ring { width:48px; height:48px; border-radius:50%; border:2.5px solid rgba(255,255,255,0.08); border-top-color:var(--blue); animation:spin .85s linear infinite; box-shadow:0 0 20px var(--blue-glow); }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .loading-text { font-size:12px; color:var(--muted); }
+
+  .backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); z-index:15; }
+
+  @media (max-width:860px) {
+    .sidebar { position:fixed; top:0; left:0; bottom:0; transform:translateX(-100%); box-shadow:12px 0 50px rgba(0,0,0,.6); }
+    .sidebar.open { transform:translateX(0); }
+    .backdrop.show { display:block; }
+    .menu-btn { display:flex; }
+    .player-wrap { padding:12px; }
+    .player-frame { border-radius:14px; }
+    .topbar { padding:max(14px,env(safe-area-inset-top)) 14px 14px; }
   }
 </style>
 </head>
 <body>
-
+<div class="bg-glow"></div>
 <div class="app">
-
-  <div class="overlay" id="overlay"></div>
-
+  <div class="backdrop" id="backdrop"></div>
   <aside class="sidebar" id="sidebar">
-    <a href="home.html" class="back-link">← Back to Home</a>
+    <a href="home.html" class="back-link"><div class="back-arrow">←</div>Back to Home</a>
     <div class="sidebar-header">
-      <div class="logo">OT</div>
-      <div class="brand">
-        <h1>Other Channels</h1>
-        <span>Live Channel Playlist</span>
-      </div>
-    </div>
-    <div class="playlist" id="playlist"></div>
-  </aside>
-
-  <main class="main">
-    <div class="topbar">
-      <div style="display:flex; align-items:center; gap:14px;">
-        <button class="menu-btn" id="menuBtn">☰</button>
-        <div class="now-playing">
-          <h2 id="channelTitle">No channel loaded</h2>
-          <span class="badge" id="statusBadge">EMPTY</span>
-        </div>
-      </div>
-      <div class="controls">
-        <button class="icon-btn" id="reloadBtn" title="Reload">⟳</button>
-        <button class="icon-btn" id="fullscreenBtn" title="Fullscreen">⛶</button>
-      </div>
+      <div class="logo-pill">🏆</div>
+      <div class="brand-info"><h1>World Cup 2026</h1><span>Match Stream Selector</span></div>
     </div>
 
-    <!-- Matchup Selector -->
-    <div class="matchup-bar">
-      <div class="matchup-label">🏆 World Cup 2026 — Pick a Match</div>
-      <div class="matchup-row">
+    <div class="match-picker">
+      <div class="picker-label">Pick a match</div>
+      <div class="team-row">
         <div class="team-selector" id="selectorA">
-          <label>Home Team</label>
+          <label>Home</label>
           <button class="team-btn" id="btnA" onclick="toggleDropdown('A')">
             <span class="flag" id="flagA">🌍</span>
-            <span class="name" id="nameA">Select team…</span>
+            <span class="tname" id="nameA">Select team…</span>
             <span class="arrow">▾</span>
           </button>
           <div class="team-dropdown" id="dropdownA">
@@ -465,14 +169,12 @@
             <div class="dd-list" id="listA"></div>
           </div>
         </div>
-
-        <div class="vs-badge">VS</div>
-
+        <div class="vs-text">VS</div>
         <div class="team-selector" id="selectorB">
-          <label>Away Team</label>
+          <label>Away</label>
           <button class="team-btn" id="btnB" onclick="toggleDropdown('B')">
             <span class="flag" id="flagB">🌍</span>
-            <span class="name" id="nameB">Select team…</span>
+            <span class="tname" id="nameB">Select team…</span>
             <span class="arrow">▾</span>
           </button>
           <div class="team-dropdown" id="dropdownB">
@@ -480,260 +182,158 @@
             <div class="dd-list" id="listB"></div>
           </div>
         </div>
+      </div>
+      <button class="watch-btn" id="watchBtn" onclick="loadMatchup()" disabled>▶ Watch Match</button>
+    </div>
 
-        <button class="watch-btn" id="watchBtn" onclick="loadMatchup()" disabled>▶ Watch</button>
+    <div class="playlist" id="playlist"></div>
+    <div class="sidebar-footer">World Cup 2026 · Live Streams</div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="glass-btn icon-only menu-btn" id="menuBtn">☰</button>
+        <div class="now-playing">
+          <h2 id="channelTitle">World Cup 2026</h2>
+          <span class="live-badge" id="statusBadge">LIVE</span>
+        </div>
+      </div>
+      <div class="controls">
+        <button class="glass-btn icon-only" id="reloadBtn" title="Reload">⟳</button>
+        <button class="glass-btn icon-only" id="fullscreenBtn" title="Fullscreen">⛶</button>
       </div>
     </div>
-    <div class="matchup-divider"></div>
-
     <div class="player-wrap">
-      <div class="player-frame" id="playerFrame">
+      <div class="player-frame show" id="playerFrame">
         <div class="loading-overlay hidden" id="loadingOverlay">
-          <div class="spinner"></div>
+          <div class="spinner-ring"></div>
+          <div class="loading-text">Loading stream…</div>
         </div>
         <div class="placeholder-msg" id="placeholderMsg">
-          <div class="ico">📺</div>
-          <div>Send me the streaming links for this section<br>and I'll wire them in here.</div>
+          <div class="ico">🏆</div>
+          Pick two teams above and hit Watch to start the stream.
         </div>
-        <iframe id="videoIframe" src="" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture" style="display:none;"></iframe>
+        <iframe id="videoIframe" src="" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture" sandbox="allow-scripts allow-same-origin allow-forms allow-popups-to-escape-sandbox" referrerpolicy="no-referrer" style="display:none;"></iframe>
       </div>
     </div>
   </main>
-
 </div>
 
 <script>
-  window.open = function(){ console.warn('Popup blocked'); return null; };
+  // Popup blocker — allow nothing to open a new window
+  window.open = function(url) { console.warn('Popup blocked:', url); return null; };
+  document.addEventListener('click', function(e) {
+    const a = e.target.closest('a');
+    if (a && a.target === '_blank') { e.preventDefault(); e.stopPropagation(); }
+  }, true);
 
-  // ── All 48 FIFA World Cup 2026 Teams ──
   const WC_TEAMS = [
-    // Hosts
-    { name:"Canada",           slug:"canada",            flag:"🇨🇦" },
-    { name:"Mexico",           slug:"mexico",            flag:"🇲🇽" },
-    { name:"United States",    slug:"united-states",     flag:"🇺🇸" },
-    // CONMEBOL
-    { name:"Argentina",        slug:"argentina",         flag:"🇦🇷" },
-    { name:"Brazil",           slug:"brazil",            flag:"🇧🇷" },
-    { name:"Uruguay",          slug:"uruguay",           flag:"🇺🇾" },
-    { name:"Colombia",         slug:"colombia",          flag:"🇨🇴" },
-    { name:"Ecuador",          slug:"ecuador",           flag:"🇪🇨" },
-    { name:"Venezuela",        slug:"venezuela",         flag:"🇻🇪" },
-    { name:"Paraguay",         slug:"paraguay",          flag:"🇵🇾" },
-    { name:"Bolivia",          slug:"bolivia",           flag:"🇧🇴" },
-    { name:"Chile",            slug:"chile",             flag:"🇨🇱" },
-    // CONCACAF
-    { name:"Honduras",         slug:"honduras",          flag:"🇭🇳" },
-    { name:"Jamaica",          slug:"jamaica",           flag:"🇯🇲" },
-    { name:"Panama",           slug:"panama",            flag:"🇵🇦" },
-    { name:"Costa Rica",       slug:"costa-rica",        flag:"🇨🇷" },
-    { name:"Haiti",            slug:"haiti",             flag:"🇭🇹" },
-    { name:"Curacao",          slug:"cura-ao",           flag:"🇨🇼" },
-    { name:"Trinidad and Tobago", slug:"trinidad-and-tobago", flag:"🇹🇹" },
-    // UEFA
-    { name:"France",           slug:"france",            flag:"🇫🇷" },
-    { name:"England",          slug:"england",           flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
-    { name:"Spain",            slug:"spain",             flag:"🇪🇸" },
-    { name:"Germany",          slug:"germany",           flag:"🇩🇪" },
-    { name:"Portugal",         slug:"portugal",          flag:"🇵🇹" },
-    { name:"Netherlands",      slug:"netherlands",       flag:"🇳🇱" },
-    { name:"Belgium",          slug:"belgium",           flag:"🇧🇪" },
-    { name:"Croatia",          slug:"croatia",           flag:"🇭🇷" },
-    { name:"Switzerland",      slug:"switzerland",       flag:"🇨🇭" },
-    { name:"Austria",          slug:"austria",           flag:"🇦🇹" },
-    { name:"Denmark",          slug:"denmark",           flag:"🇩🇰" },
-    { name:"Hungary",          slug:"hungary",           flag:"🇭🇺" },
-    { name:"Norway",           slug:"norway",            flag:"🇳🇴" },
-    { name:"Scotland",         slug:"scotland",          flag:"🏴󠁧󠁢󠁳󠁣󠁴󠁿" },
-    { name:"Serbia",           slug:"serbia",            flag:"🇷🇸" },
-    { name:"Slovakia",         slug:"slovakia",          flag:"🇸🇰" },
-    { name:"Sweden",           slug:"sweden",            flag:"🇸🇪" },
-    { name:"Turkey",           slug:"turkey",            flag:"🇹🇷" },
-    { name:"Ukraine",          slug:"ukraine",           flag:"🇺🇦" },
-    { name:"Bosnia Herzegovina", slug:"bosnia-herzegovina", flag:"🇧🇦" },
-    { name:"Czechia",          slug:"czechia",           flag:"🇨🇿" },
-    // CAF
-    { name:"Morocco",          slug:"morocco",           flag:"🇲🇦" },
-    { name:"Senegal",          slug:"senegal",           flag:"🇸🇳" },
-    { name:"Egypt",            slug:"egypt",             flag:"🇪🇬" },
-    { name:"Algeria",          slug:"algeria",           flag:"🇩🇿" },
-    { name:"Tunisia",          slug:"tunisia",           flag:"🇹🇳" },
-    { name:"Nigeria",          slug:"nigeria",           flag:"🇳🇬" },
-    { name:"Cameroon",         slug:"cameroon",          flag:"🇨🇲" },
-    { name:"Ghana",            slug:"ghana",             flag:"🇬🇭" },
-    { name:"Ivory Coast",      slug:"ivory-coast",       flag:"🇨🇮" },
-    { name:"South Africa",     slug:"south-africa",      flag:"🇿🇦" },
-    { name:"DR Congo",         slug:"dr-congo",          flag:"🇨🇩" },
-    { name:"Cape Verde",       slug:"cape-verde",        flag:"🇨🇻" },
-    // AFC
-    { name:"Japan",            slug:"japan",             flag:"🇯🇵" },
-    { name:"South Korea",      slug:"south-korea",       flag:"🇰🇷" },
-    { name:"Australia",        slug:"australia",         flag:"🇦🇺" },
-    { name:"Iran",             slug:"iran",              flag:"🇮🇷" },
-    { name:"Saudi Arabia",     slug:"saudi-arabia",      flag:"🇸🇦" },
-    { name:"Qatar",            slug:"qatar",             flag:"🇶🇦" },
-    { name:"Iraq",             slug:"iraq",              flag:"🇮🇶" },
-    { name:"Jordan",           slug:"jordan",            flag:"🇯🇴" },
-    { name:"Uzbekistan",       slug:"uzbekistan",        flag:"🇺🇿" },
-    // OFC
-    { name:"New Zealand",      slug:"new-zealand",       flag:"🇳🇿" },
-  ].sort((a,b)=>a.name.localeCompare(b.name));
-
+    {name:"Algeria",slug:"algeria",flag:"🇩🇿"},{name:"Argentina",slug:"argentina",flag:"🇦🇷"},
+    {name:"Australia",slug:"australia",flag:"🇦🇺"},{name:"Austria",slug:"austria",flag:"🇦🇹"},
+    {name:"Belgium",slug:"belgium",flag:"🇧🇪"},{name:"Bolivia",slug:"bolivia",flag:"🇧🇴"},
+    {name:"Bosnia Herzegovina",slug:"bosnia-herzegovina",flag:"🇧🇦"},{name:"Brazil",slug:"brazil",flag:"🇧🇷"},
+    {name:"Cameroon",slug:"cameroon",flag:"🇨🇲"},{name:"Canada",slug:"canada",flag:"🇨🇦"},
+    {name:"Cape Verde",slug:"cape-verde",flag:"🇨🇻"},{name:"Chile",slug:"chile",flag:"🇨🇱"},
+    {name:"Colombia",slug:"colombia",flag:"🇨🇴"},{name:"Costa Rica",slug:"costa-rica",flag:"🇨🇷"},
+    {name:"Croatia",slug:"croatia",flag:"🇭🇷"},{name:"Curacao",slug:"cura-ao",flag:"🇨🇼"},
+    {name:"Czechia",slug:"czechia",flag:"🇨🇿"},{name:"Denmark",slug:"denmark",flag:"🇩🇰"},
+    {name:"DR Congo",slug:"dr-congo",flag:"🇨🇩"},{name:"Ecuador",slug:"ecuador",flag:"🇪🇨"},
+    {name:"Egypt",slug:"egypt",flag:"🇪🇬"},{name:"England",slug:"england",flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},
+    {name:"France",slug:"france",flag:"🇫🇷"},{name:"Germany",slug:"germany",flag:"🇩🇪"},
+    {name:"Ghana",slug:"ghana",flag:"🇬🇭"},{name:"Haiti",slug:"haiti",flag:"🇭🇹"},
+    {name:"Honduras",slug:"honduras",flag:"🇭🇳"},{name:"Hungary",slug:"hungary",flag:"🇭🇺"},
+    {name:"Iran",slug:"iran",flag:"🇮🇷"},{name:"Iraq",slug:"iraq",flag:"🇮🇶"},
+    {name:"Ivory Coast",slug:"ivory-coast",flag:"🇨🇮"},{name:"Jamaica",slug:"jamaica",flag:"🇯🇲"},
+    {name:"Japan",slug:"japan",flag:"🇯🇵"},{name:"Jordan",slug:"jordan",flag:"🇯🇴"},
+    {name:"Mexico",slug:"mexico",flag:"🇲🇽"},{name:"Morocco",slug:"morocco",flag:"🇲🇦"},
+    {name:"Netherlands",slug:"netherlands",flag:"🇳🇱"},{name:"New Zealand",slug:"new-zealand",flag:"🇳🇿"},
+    {name:"Nigeria",slug:"nigeria",flag:"🇳🇬"},{name:"Norway",slug:"norway",flag:"🇳🇴"},
+    {name:"Panama",slug:"panama",flag:"🇵🇦"},{name:"Paraguay",slug:"paraguay",flag:"🇵🇾"},
+    {name:"Portugal",slug:"portugal",flag:"🇵🇹"},{name:"Qatar",slug:"qatar",flag:"🇶🇦"},
+    {name:"Saudi Arabia",slug:"saudi-arabia",flag:"🇸🇦"},{name:"Scotland",slug:"scotland",flag:"🏴󠁧󠁢󠁳󠁣󠁴󠁿"},
+    {name:"Senegal",slug:"senegal",flag:"🇸🇳"},{name:"Serbia",slug:"serbia",flag:"🇷🇸"},
+    {name:"Slovakia",slug:"slovakia",flag:"🇸🇰"},{name:"South Africa",slug:"south-africa",flag:"🇿🇦"},
+    {name:"South Korea",slug:"south-korea",flag:"🇰🇷"},{name:"Spain",slug:"spain",flag:"🇪🇸"},
+    {name:"Sweden",slug:"sweden",flag:"🇸🇪"},{name:"Switzerland",slug:"switzerland",flag:"🇨🇭"},
+    {name:"Trinidad and Tobago",slug:"trinidad-and-tobago",flag:"🇹🇹"},{name:"Tunisia",slug:"tunisia",flag:"🇹🇳"},
+    {name:"Turkey",slug:"turkey",flag:"🇹🇷"},{name:"Ukraine",slug:"ukraine",flag:"🇺🇦"},
+    {name:"United States",slug:"united-states",flag:"🇺🇸"},{name:"Uruguay",slug:"uruguay",flag:"🇺🇾"},
+    {name:"Uzbekistan",slug:"uzbekistan",flag:"🇺🇿"},{name:"Venezuela",slug:"venezuela",flag:"🇻🇪"},
+  ];
   const BASE_URL = "https://embed.st/embed/admin/ppv-";
+  let selectedA = null, selectedB = null;
 
-  let selectedA = null;
-  let selectedB = null;
-
-  // ── Playlist (legacy) ──
-  const channels = [];
-  const playlistEl = document.getElementById('playlist');
   const iframe = document.getElementById('videoIframe');
-  const playerFrame = document.getElementById('playerFrame');
-  const loadingOverlay = document.getElementById('loadingOverlay');
-  const placeholderMsg = document.getElementById('placeholderMsg');
-  const channelTitle = document.getElementById('channelTitle');
-  const statusBadge = document.getElementById('statusBadge');
+  const frame = document.getElementById('playerFrame');
+  const loading = document.getElementById('loadingOverlay');
+  const placeholder = document.getElementById('placeholderMsg');
+  const titleEl = document.getElementById('channelTitle');
   const sidebar = document.getElementById('sidebar');
-  const overlay = document.getElementById('overlay');
+  const backdrop = document.getElementById('backdrop');
 
-  let activeIndex = -1;
-
-  function renderPlaylist(){
-    playlistEl.innerHTML='';
-    if(channels.length===0){
-      const empty=document.createElement('div');
-      empty.className='empty-state';
-      empty.innerHTML=`<div class="ico">🏆</div>Pick a match<br>above to start watching.`;
-      playlistEl.appendChild(empty);
-      return;
-    }
-    channels.forEach((ch,i)=>{
-      const div=document.createElement('div');
-      div.className='channel'+(i===activeIndex?' active':'');
-      div.innerHTML=`<div class="ch-icon">${ch.code}</div><div class="ch-info"><div class="ch-name">${ch.name}</div><div class="ch-sub">${ch.sub}</div></div><div class="live-dot"></div>`;
-      div.addEventListener('click',()=>selectChannel(i));
-      playlistEl.appendChild(div);
-    });
-  }
-
-  function selectChannel(i){
-    activeIndex=i;
-    renderPlaylist();
-    loadChannel(i);
-    if(window.innerWidth<=860) closeSidebar();
-  }
-
-  function loadChannel(i){
-    const ch=channels[i];
-    if(!ch) return;
-    channelTitle.textContent=ch.name;
-    statusBadge.textContent='LIVE';
-    placeholderMsg.style.display='none';
-    iframe.style.display='block';
-    loadingOverlay.classList.remove('hidden');
-    playerFrame.classList.remove('show');
-    iframe.src='about:blank';
-    setTimeout(()=>{ iframe.src=ch.url; },150);
-  }
-
-  iframe.addEventListener('load',()=>{
-    if(iframe.src==='about:blank'||iframe.src==='') return;
-    setTimeout(()=>{
-      loadingOverlay.classList.add('hidden');
-      playerFrame.classList.add('show');
-    },300);
-  });
-
-  document.getElementById('reloadBtn').addEventListener('click',()=>{ if(activeIndex>=0) loadChannel(activeIndex); });
-  document.getElementById('fullscreenBtn').addEventListener('click',()=>{ if(playerFrame.requestFullscreen) playerFrame.requestFullscreen(); });
-
-  function openSidebar(){ sidebar.classList.add('open'); overlay.classList.add('show'); }
-  function closeSidebar(){ sidebar.classList.remove('open'); overlay.classList.remove('show'); }
-  document.getElementById('menuBtn').addEventListener('click',()=>{ sidebar.classList.contains('open')?closeSidebar():openSidebar(); });
-  overlay.addEventListener('click',closeSidebar);
-
-  // ── Matchup Selector Logic ──
-  function buildDropdown(side){
-    renderDropdown(side, WC_TEAMS);
-  }
-
-  function renderDropdown(side, teams){
+  function renderDropdown(side, teams) {
     const list = document.getElementById('list'+side);
-    list.innerHTML='';
-    teams.forEach(t=>{
-      const div=document.createElement('div');
-      div.className='dd-item'+(
-        (side==='A'&&selectedA&&selectedA.slug===t.slug)||
-        (side==='B'&&selectedB&&selectedB.slug===t.slug)
-        ? ' selected':'');
-      div.innerHTML=`<span class="flag">${t.flag}</span><span>${t.name}</span>`;
-      div.addEventListener('click',()=>pickTeam(side,t));
+    list.innerHTML = '';
+    teams.forEach(t => {
+      const div = document.createElement('div');
+      div.className = 'dd-item' + ((side==='A'&&selectedA?.slug===t.slug)||(side==='B'&&selectedB?.slug===t.slug)?' selected':'');
+      div.innerHTML = `<span class="flag">${t.flag}</span><span>${t.name}</span>`;
+      div.addEventListener('click', () => pickTeam(side, t));
       list.appendChild(div);
     });
   }
-
-  function filterDD(side, query){
-    const q=query.toLowerCase().trim();
-    const filtered = q ? WC_TEAMS.filter(t=>t.name.toLowerCase().includes(q)) : WC_TEAMS;
-    renderDropdown(side, filtered);
+  function filterDD(side, q) {
+    const f = q ? WC_TEAMS.filter(t=>t.name.toLowerCase().includes(q.toLowerCase())) : WC_TEAMS;
+    renderDropdown(side, f);
   }
-
-  function toggleDropdown(side){
-    const dd=document.getElementById('dropdown'+side);
+  function toggleDropdown(side) {
+    const dd = document.getElementById('dropdown'+side);
     const other = side==='A'?'B':'A';
     document.getElementById('dropdown'+other).classList.remove('open');
-    const isOpen=dd.classList.contains('open');
     dd.classList.toggle('open');
-    if(!isOpen){
-      document.getElementById('search'+side).value='';
+    if (dd.classList.contains('open')) {
+      document.getElementById('search'+side).value = '';
       renderDropdown(side, WC_TEAMS);
-      setTimeout(()=>document.getElementById('search'+side).focus(),50);
+      setTimeout(() => document.getElementById('search'+side).focus(), 50);
     }
   }
-
-  function pickTeam(side, team){
-    if(side==='A') selectedA=team;
-    else selectedB=team;
-    document.getElementById('flag'+side).textContent=team.flag;
-    document.getElementById('name'+side).textContent=team.name;
+  function pickTeam(side, team) {
+    if (side==='A') selectedA=team; else selectedB=team;
+    document.getElementById('flag'+side).textContent = team.flag;
+    document.getElementById('name'+side).textContent = team.name;
     document.getElementById('dropdown'+side).classList.remove('open');
-    updateWatchBtn();
-    renderDropdown('A', WC_TEAMS);
-    renderDropdown('B', WC_TEAMS);
+    document.getElementById('watchBtn').disabled = !(selectedA&&selectedB&&selectedA.slug!==selectedB.slug);
+    renderDropdown('A',WC_TEAMS); renderDropdown('B',WC_TEAMS);
   }
-
-  function updateWatchBtn(){
-    document.getElementById('watchBtn').disabled=!(selectedA&&selectedB&&selectedA.slug!==selectedB.slug);
-  }
-
-  function loadMatchup(){
-    if(!selectedA||!selectedB||selectedA.slug===selectedB.slug) return;
+  function loadMatchup() {
+    if (!selectedA||!selectedB||selectedA.slug===selectedB.slug) return;
     const url = BASE_URL+selectedA.slug+'-vs-'+selectedB.slug+'/7';
-    channelTitle.textContent = selectedA.name+' vs '+selectedB.name;
-    statusBadge.textContent='LIVE';
-    placeholderMsg.style.display='none';
-    iframe.style.display='block';
-    loadingOverlay.classList.remove('hidden');
-    playerFrame.classList.remove('show');
-    iframe.src='about:blank';
-    setTimeout(()=>{ iframe.src=url; },150);
-    if(window.innerWidth<=860) closeSidebar();
+    titleEl.textContent = selectedA.name+' vs '+selectedB.name;
+    placeholder.style.display = 'none';
+    iframe.style.display = 'block';
+    loading.classList.remove('hidden');
+    frame.classList.remove('show');
+    iframe.src = 'about:blank';
+    setTimeout(() => { iframe.src = url; }, 160);
+    if (window.innerWidth<=860) closeSidebar();
   }
-
-  // Close dropdowns when clicking outside
-  document.addEventListener('click',e=>{
-    ['A','B'].forEach(side=>{
-      const sel=document.getElementById('selector'+side);
-      if(!sel.contains(e.target)){
-        document.getElementById('dropdown'+side).classList.remove('open');
-      }
-    });
+  iframe.addEventListener('load', () => {
+    if (!iframe.src||iframe.src==='about:blank') return;
+    setTimeout(() => { loading.classList.add('hidden'); frame.classList.add('show'); }, 300);
   });
 
-  buildDropdown('A');
-  buildDropdown('B');
-  renderPlaylist();
-  playerFrame.classList.add('show');
-</script>
+  document.getElementById('reloadBtn').addEventListener('click', () => { if (iframe.src&&iframe.src!=='about:blank') { loading.classList.remove('hidden'); iframe.src=iframe.src; } });
+  document.getElementById('fullscreenBtn').addEventListener('click', () => { const el=document.documentElement; if(el.requestFullscreen)el.requestFullscreen(); else if(el.webkitRequestFullscreen)el.webkitRequestFullscreen(); });
+  function openSidebar()  { sidebar.classList.add('open'); backdrop.classList.add('show'); }
+  function closeSidebar() { sidebar.classList.remove('open'); backdrop.classList.remove('show'); }
+  document.getElementById('menuBtn').addEventListener('click', () => sidebar.classList.contains('open')?closeSidebar():openSidebar());
+  backdrop.addEventListener('click', closeSidebar);
+  document.addEventListener('click', e => {
+    ['A','B'].forEach(s => { const sel=document.getElementById('selector'+s); if(!sel.contains(e.target)) document.getElementById('dropdown'+s).classList.remove('open'); });
+  });
 
+  renderDropdown('A',WC_TEAMS); renderDropdown('B',WC_TEAMS);
+</script>
 </body>
 </html>
