@@ -329,6 +329,18 @@
     el.addEventListener('click', function () { guardActive = false; }, true);
   });
   window.addEventListener('pagehide', function () { guardActive = false; });
+  // Middle-click / ctrl-click new-tab attempts on any link
+  document.addEventListener('auxclick', function (e) {
+    if (e.button === 1) { e.preventDefault(); e.stopPropagation(); }
+  }, true);
+  // Backup watchdog: some browsers don't reliably fire 'blur' for popunders,
+  // so also re-check focus a few times per second.
+  setInterval(function () {
+    if (guardActive && document.visibilityState === 'visible' && !document.hasFocus()) {
+      window.focus();
+    }
+  }, 400);
+
 
   const WC_TEAMS = [
     {name:"Algeria",slug:"algeria",flag:"🇩🇿"},{name:"Argentina",slug:"argentina",flag:"🇦🇷"},

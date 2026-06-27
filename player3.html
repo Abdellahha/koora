@@ -171,6 +171,18 @@
     el.addEventListener('click', function () { guardActive = false; }, true);
   });
   window.addEventListener('pagehide', function () { guardActive = false; });
+  // Middle-click / ctrl-click new-tab attempts on any link
+  document.addEventListener('auxclick', function (e) {
+    if (e.button === 1) { e.preventDefault(); e.stopPropagation(); }
+  }, true);
+  // Backup watchdog: some browsers don't reliably fire 'blur' for popunders,
+  // so also re-check focus a few times per second.
+  setInterval(function () {
+    if (guardActive && document.visibilityState === 'visible' && !document.hasFocus()) {
+      window.focus();
+    }
+  }, 400);
+
 
   const channels = [
     { name:"beIN Sport 1", sub:"Live Channel", code:"BS1", url:"https://ntv.cx/embed?t=OThTUzhFbk9WeExodUtsTmV0cFgxMVdndW5LbW9PbUtMa2NlM2UxS3VHTy9CWWFxS0dLUEdMRmhrMnpXWHdxTA~~" },
