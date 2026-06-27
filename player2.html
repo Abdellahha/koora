@@ -264,11 +264,42 @@
 </div>
 
 <script>
+  // ---- Ad/popup/redirect guard (no sandbox attribute needed) ----
   window.open = function(url){ console.warn('Popup blocked:',url); return null; };
   document.addEventListener('click', function(e){
     const a = e.target.closest('a');
     if(a && a.target==='_blank'){ e.preventDefault(); e.stopPropagation(); }
   }, true);
+
+  // 1) Popunder catcher: if a new tab/window steals focus (the classic
+  //    "click the video -> a new tab opens behind it" ad trick), snap focus
+  //    straight back to this page so the ad tab never gets seen.
+  let guardActive = true;
+  window.addEventListener('blur', function () {
+    if (!guardActive) return;
+    setTimeout(function () { if (guardActive) window.focus(); }, 0);
+  });
+  document.addEventListener('visibilitychange', function () {
+    if (guardActive && document.visibilityState === 'visible') window.focus();
+  });
+
+  // 2) Top-frame redirect guard: some embeds try to navigate the WHOLE page
+  //    (not just open a tab) straight to an ad site when you click. This
+  //    forces the browser to ask "Leave site?" before that's allowed to
+  //    happen, so an ad redirect gets stopped at a confirmation prompt
+  //    instead of silently taking you away.
+  window.addEventListener('beforeunload', function (e) {
+    if (!guardActive) return;
+    e.preventDefault();
+    e.returnValue = '';
+    return '';
+  });
+  // Real, intentional navigation (Back to Home, reload, fullscreen, etc.)
+  // disarms the guard first so it doesn't nag the user on their own clicks.
+  document.querySelectorAll('.back-link, #reloadBtn, #fullscreenBtn, #menuBtn').forEach(function (el) {
+    el.addEventListener('click', function () { guardActive = false; }, true);
+  });
+  window.addEventListener('pagehide', function () { guardActive = false; });
 
   const WC_TEAMS = [
     {name:"Algeria",slug:"algeria",flag:"🇩🇿"},{name:"Argentina",slug:"argentina",flag:"🇦🇷"},
