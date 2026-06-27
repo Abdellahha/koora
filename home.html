@@ -2,6 +2,20 @@
   <html lang="en">
   <head>
   <meta charset="UTF-8">
+<script>
+(function(){
+  var ua = navigator.userAgent || '';
+  var isTV = /SmartTV|SMART-TV|Tizen|WebOS|Web0S|NetCast|HbbTV|BRAVIA|AFT[A-Z]|GoogleTV|AppleTV|CrKey|Roku|Vidaa|VIDAA|Hisense|PHILIPSTV|InettvBrowser|POV_TV|NETTV/i.test(ua);
+  if(!isTV){
+    try{
+      var bigNoTouch = window.matchMedia('(min-width: 1800px)').matches && navigator.maxTouchPoints === 0 && !('ontouchstart' in window);
+      if(bigNoTouch) isTV = true;
+    }catch(e){}
+  }
+  if(isTV) document.documentElement.classList.add('tv-mode');
+})();
+</script>
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -52,8 +66,9 @@
     .blob {
       position: absolute;
       border-radius: 50%;
-      filter: blur(30px);
-      opacity: 0.3;
+      filter: blur(80px);
+      opacity: 0.35;
+      animation: drift 18s ease-in-out infinite alternate;
     }
     .blob-1 { width: 500px; height: 500px; background: radial-gradient(circle, #ff3b30, transparent); top: -150px; left: -100px; animation-delay: 0s; }
     .blob-2 { width: 400px; height: 400px; background: radial-gradient(circle, #0a84ff, transparent); top: 10%; right: -100px; animation-delay: -6s; }
@@ -85,8 +100,8 @@
       display: flex; align-items: center; justify-content: center;
       font-size: 36px;
       margin: 0 auto 24px;
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
     }
 
     .title {
@@ -128,8 +143,8 @@
         0 20px 60px rgba(0,0,0,0.45),
         0 1px 0 rgba(255,255,255,0.22) inset,
         0 -1px 0 rgba(0,0,0,0.3) inset;
-      backdrop-filter: blur(5px) saturate(120%);
-      -webkit-backdrop-filter: blur(5px) saturate(120%);
+      backdrop-filter: blur(40px) saturate(180%);
+      -webkit-backdrop-filter: blur(40px) saturate(180%);
       cursor: pointer;
       text-decoration: none;
       color: var(--text);
@@ -208,8 +223,8 @@
       border-radius: 20px;
       background: rgba(255,255,255,0.08);
       border: 1px solid rgba(255,255,255,0.18);
-      backdrop-filter: blur(5px);
-      -webkit-backdrop-filter: blur(5px);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
     }
     .pill-red { color: #ff6b6b; border-color: rgba(255,59,48,0.4); background: rgba(255,59,48,0.12); }
     .pill-blue { color: #6bb5ff; border-color: rgba(10,132,255,0.4); background: rgba(10,132,255,0.12); }
@@ -246,6 +261,21 @@
       .card { width: 100%; max-width: 320px; }
     }
     :focus-visible, .channel:focus, .glass-btn:focus, .card:focus, .team-btn:focus, .watch-btn:focus, .dd-item:focus, .back-link:focus { outline: 3px solid #ff3b30 !important; outline-offset: 2px; box-shadow: 0 0 0 5px rgba(255,59,48,0.35) !important; }
+  /* ===== TV-only performance mode: kills heavy blur/animation just for
+     smart-TV browsers. PC and phone are untouched and keep full effects. ===== */
+  html.tv-mode * { animation: none !important; transition-duration: .15s !important; }
+  html.tv-mode .sidebar, html.tv-mode .topbar, html.tv-mode .glass-btn,
+  html.tv-mode .ch-badge, html.tv-mode .team-badge, html.tv-mode .loading-overlay,
+  html.tv-mode .backdrop, html.tv-mode .card, html.tv-mode .pill,
+  html.tv-mode .logo-mark, html.tv-mode .logo-pill {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
+  }
+  html.tv-mode .bg-glow, html.tv-mode .blob, html.tv-mode .bg-ambient { display: none !important; }
+  html.tv-mode .channel.active .live-dot, html.tv-mode .live-dot { animation: none !important; opacity: 1 !important; }
+  html.tv-mode .card::before { display: none !important; }
+
 </style>
   </head>
   <body>

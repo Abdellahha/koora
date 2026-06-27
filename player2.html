@@ -2,6 +2,20 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script>
+(function(){
+  var ua = navigator.userAgent || '';
+  var isTV = /SmartTV|SMART-TV|Tizen|WebOS|Web0S|NetCast|HbbTV|BRAVIA|AFT[A-Z]|GoogleTV|AppleTV|CrKey|Roku|Vidaa|VIDAA|Hisense|PHILIPSTV|InettvBrowser|POV_TV|NETTV/i.test(ua);
+  if(!isTV){
+    try{
+      var bigNoTouch = window.matchMedia('(min-width: 1800px)').matches && navigator.maxTouchPoints === 0 && !('ontouchstart' in window);
+      if(bigNoTouch) isTV = true;
+    }catch(e){}
+  }
+  if(isTV) document.documentElement.classList.add('tv-mode');
+})();
+</script>
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -29,8 +43,8 @@
   .sidebar {
     width:300px; min-width:260px;
     background:rgba(10,10,12,0.88);
-    backdrop-filter:blur(5px) saturate(120%);
-    -webkit-backdrop-filter:blur(5px) saturate(120%);
+    backdrop-filter:blur(40px) saturate(180%);
+    -webkit-backdrop-filter:blur(40px) saturate(180%);
     border-right:1px solid var(--glass-border);
     display:flex; flex-direction:column;
     transition:transform .38s cubic-bezier(.4,0,.2,1);
@@ -78,7 +92,7 @@
     width:100%; padding:10px 12px; border-radius:12px;
     background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.13);
     box-shadow:inset 0 1px 0 rgba(255,255,255,0.1),0 2px 6px rgba(0,0,0,0.3);
-    backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px);
+    backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
     color:var(--text); cursor:pointer; display:flex; align-items:center; gap:8px;
     font-size:13px; font-family:inherit; text-align:left;
     transition:background .2s, border-color .2s, border-radius .2s;
@@ -139,11 +153,11 @@
 
   .main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
 
-  .topbar { display:flex; align-items:center; justify-content:space-between; padding:max(14px,env(safe-area-inset-top)) 20px 14px; background:rgba(10,10,12,0.7); backdrop-filter:blur(3px) saturate(115%); -webkit-backdrop-filter:blur(3px) saturate(115%); border-bottom:1px solid var(--glass-border); flex-shrink:0; }
+  .topbar { display:flex; align-items:center; justify-content:space-between; padding:max(14px,env(safe-area-inset-top)) 20px 14px; background:rgba(10,10,12,0.7); backdrop-filter:blur(30px) saturate(160%); -webkit-backdrop-filter:blur(30px) saturate(160%); border-bottom:1px solid var(--glass-border); flex-shrink:0; }
   .topbar-left { display:flex; align-items:center; gap:10px; }
   .now-playing h2 { font-size:16px; font-weight:600; letter-spacing:-0.2px; }
 
-  .glass-btn { height:36px; border-radius:11px; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.15); box-shadow:0 2px 8px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.2); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); color:var(--text); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .2s,transform .15s; font-size:15px; padding:0; width:36px; }
+  .glass-btn { height:36px; border-radius:11px; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.15); box-shadow:0 2px 8px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.2); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); color:var(--text); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .2s,transform .15s; font-size:15px; padding:0; width:36px; }
   .glass-btn:hover { background:rgba(255,255,255,0.12); }
   .glass-btn:active { transform:scale(0.95); }
   .menu-btn { display:none; }
@@ -165,7 +179,7 @@
   @keyframes spin { to { transform:rotate(360deg); } }
   .loading-text { font-size:12px; color:var(--muted); }
 
-  .backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px); z-index:15; }
+  .backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); z-index:15; }
 
   @media (max-width:860px) {
     .sidebar { position:fixed; top:0; left:0; bottom:0; transform:translateX(-100%); box-shadow:12px 0 50px rgba(0,0,0,.6); }
@@ -177,6 +191,21 @@
     .topbar { padding:max(14px,env(safe-area-inset-top)) 14px 14px; }
   }
   :focus-visible, .channel:focus, .glass-btn:focus, .card:focus, .team-btn:focus, .watch-btn:focus, .dd-item:focus, .back-link:focus { outline: 3px solid #ff3b30 !important; outline-offset: 2px; box-shadow: 0 0 0 5px rgba(255,59,48,0.35) !important; }
+  /* ===== TV-only performance mode: kills heavy blur/animation just for
+     smart-TV browsers. PC and phone are untouched and keep full effects. ===== */
+  html.tv-mode * { animation: none !important; transition-duration: .15s !important; }
+  html.tv-mode .sidebar, html.tv-mode .topbar, html.tv-mode .glass-btn,
+  html.tv-mode .ch-badge, html.tv-mode .team-badge, html.tv-mode .loading-overlay,
+  html.tv-mode .backdrop, html.tv-mode .card, html.tv-mode .pill,
+  html.tv-mode .logo-mark, html.tv-mode .logo-pill {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
+  }
+  html.tv-mode .bg-glow, html.tv-mode .blob, html.tv-mode .bg-ambient { display: none !important; }
+  html.tv-mode .channel.active .live-dot, html.tv-mode .live-dot { animation: none !important; opacity: 1 !important; }
+  html.tv-mode .card::before { display: none !important; }
+
 </style>
 </head>
 <body>
@@ -264,11 +293,42 @@
 </div>
 
 <script>
+  // ---- Ad/popup/redirect guard (no sandbox attribute needed) ----
   window.open = function(url){ console.warn('Popup blocked:',url); return null; };
   document.addEventListener('click', function(e){
     const a = e.target.closest('a');
     if(a && a.target==='_blank'){ e.preventDefault(); e.stopPropagation(); }
   }, true);
+
+  // 1) Popunder catcher: if a new tab/window steals focus (the classic
+  //    "click the video -> a new tab opens behind it" ad trick), snap focus
+  //    straight back to this page so the ad tab never gets seen.
+  let guardActive = true;
+  window.addEventListener('blur', function () {
+    if (!guardActive) return;
+    setTimeout(function () { if (guardActive) window.focus(); }, 0);
+  });
+  document.addEventListener('visibilitychange', function () {
+    if (guardActive && document.visibilityState === 'visible') window.focus();
+  });
+
+  // 2) Top-frame redirect guard: some embeds try to navigate the WHOLE page
+  //    (not just open a tab) straight to an ad site when you click. This
+  //    forces the browser to ask "Leave site?" before that's allowed to
+  //    happen, so an ad redirect gets stopped at a confirmation prompt
+  //    instead of silently taking you away.
+  window.addEventListener('beforeunload', function (e) {
+    if (!guardActive) return;
+    e.preventDefault();
+    e.returnValue = '';
+    return '';
+  });
+  // Real, intentional navigation (Back to Home, reload, fullscreen, etc.)
+  // disarms the guard first so it doesn't nag the user on their own clicks.
+  document.querySelectorAll('.back-link, #reloadBtn, #fullscreenBtn, #menuBtn').forEach(function (el) {
+    el.addEventListener('click', function () { guardActive = false; }, true);
+  });
+  window.addEventListener('pagehide', function () { guardActive = false; });
 
   const WC_TEAMS = [
     {name:"Algeria",slug:"algeria",flag:"🇩🇿"},{name:"Argentina",slug:"argentina",flag:"🇦🇷"},
