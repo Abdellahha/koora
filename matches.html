@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <script>
@@ -14,7 +14,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#000000">
-<title>كورة لايف – مباشر</title>
+<title>Live Matches</title>
 <style>
 :root {
   --border: rgba(255,255,255,0.12);
@@ -42,15 +42,12 @@ html,body{width:100%;height:100%;background:#000;color:var(--text);font-family:-
 }
 
 .sb-head{
-  padding:14px 16px 12px;
+  padding:12px 16px 10px;
   border-bottom:1px solid var(--border);
   flex-shrink:0;
-  display:flex;align-items:center;justify-content:space-between;
-  gap:10px;
+  display:flex;align-items:center;justify-content:center;
 }
-.sb-logo{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;color:var(--red);}
-.sb-logo svg{flex-shrink:0;}
-.sb-clock{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.sb-clock{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;}
 
 .sb-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;}
 .sb-tab{
@@ -163,13 +160,13 @@ html,body{width:100%;height:100%;background:#000;color:var(--text);font-family:-
       <div class="topbar-left">
         <button class="glass-btn menu-btn" id="menuBtn">☰</button>
         <div class="now-playing">
-          <h2 id="channelTitle">كورة لايف – مباشر</h2>
+          <h2 id="channelTitle">Live Matches</h2>
           <span class="live-badge" id="liveBadge" style="display:none">LIVE</span>
         </div>
       </div>
       <div class="controls">
-        <button class="glass-btn" id="reloadBtn" title="إعادة تشغيل">⟳</button>
-        <button class="glass-btn" id="fullscreenBtn" title="شاشة كاملة">⛶</button>
+        <button class="glass-btn" id="reloadBtn" title="Reload">⟳</button>
+        <button class="glass-btn" id="fullscreenBtn" title="Fullscreen">⛶</button>
       </div>
     </div>
 
@@ -177,12 +174,12 @@ html,body{width:100%;height:100%;background:#000;color:var(--text);font-family:-
       <div class="player-frame" id="playerFrame">
         <div class="loading-overlay hidden" id="loadingOverlay">
           <div class="spinner-ring"></div>
-          <div class="loading-text">جاري تحميل البث...</div>
+          <div class="loading-text">Loading stream…</div>
         </div>
         <div class="placeholder-msg" id="placeholderMsg">
           <div class="ico">⚽</div>
-          <strong>اختر مباراة من القائمة</strong>
-          <span style="font-size:12px">المباريات المباشرة والقادمة من كورة لايف<br>تتجدد تلقائياً كل دقيقة</span>
+          <strong>Pick a match from the list</strong>
+          <span style="font-size:12px">Live and upcoming matches · auto-refreshes every minute</span>
         </div>
         <iframe id="videoIframe" src=""
           allowfullscreen webkit-allowfullscreen playsinline webkit-playsinline
@@ -196,31 +193,27 @@ html,body{width:100%;height:100%;background:#000;color:var(--text);font-family:-
   <!-- SIDEBAR: MATCHES -->
   <aside class="sidebar" id="sidebar">
     <div class="sb-head">
-      <div class="sb-logo">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
-        كورة لايف
-      </div>
       <div class="sb-clock" id="sbClock">--:--</div>
     </div>
 
     <div class="sb-tabs">
       <button class="sb-tab active" id="tabLive" onclick="showTab('live')">
-        <span class="pulse"></span> مباشر <span class="cnt" id="cntLive">0</span>
+        <span class="pulse"></span> Live <span class="cnt" id="cntLive">0</span>
       </button>
       <button class="sb-tab tab-up" id="tabUp" onclick="showTab('upcoming')">
-        ⏰ قادمة <span class="cnt" id="cntUp">0</span>
+        ⏰ Upcoming <span class="cnt" id="cntUp">0</span>
       </button>
     </div>
 
     <div class="refresh-bar">
-      <span id="refreshLabel">جاري التحميل...</span>
+      <span id="refreshLabel">Loading…</span>
       <span class="pulse"></span>
     </div>
 
     <div class="matches-scroll" id="matchesScroll">
       <div class="sb-loading" id="sbLoading">
         <div class="spin-sm"></div>
-        <span>تحميل المباريات...</span>
+        <span>Loading matches…</span>
       </div>
     </div>
   </aside>
@@ -253,7 +246,7 @@ const SLUG_MAP = {
   'الكاميرون':'cameroon','كندا':'canada','الرأس الأخضر':'cape-verde',
   'تشيلي':'chile','كولومبيا':'colombia','كوستاريكا':'costa-rica',
   'كرواتيا':'croatia','كوراكاو':'curacao','التشيك':'czechia',
-  'الدنمارك':'denmark','الكونغو الديمقراطية':'dr-congo','الإكوادور':'ecuador',
+  'الدنمارك':'denmark','الكونغو الديمقراطية':'congo-dr','الإكوادور':'ecuador',
   'مصر':'egypt','إنجلترا':'england','فرنسا':'france','ألمانيا':'germany',
   'غانا':'ghana','هايتي':'haiti','هندوراس':'honduras','المجر':'hungary',
   'إيران':'iran','العراق':'iraq','ساحل العاج':'ivory-coast',
@@ -292,7 +285,7 @@ const FLAGS = {
   'belgium':'🇧🇪','bolivia':'🇧🇴','bosnia-herzegovina':'🇧🇦','brazil':'🇧🇷',
   'cameroon':'🇨🇲','canada':'🇨🇦','cape-verde':'🇨🇻','chile':'🇨🇱',
   'colombia':'🇨🇴','costa-rica':'🇨🇷','croatia':'🇭🇷','curacao':'🇨🇼',
-  'czechia':'🇨🇿','denmark':'🇩🇰','dr-congo':'🇨🇩','ecuador':'🇪🇨',
+  'czechia':'🇨🇿','denmark':'🇩🇰','congo-dr':'🇨🇩','ecuador':'🇪🇨',
   'egypt':'🇪🇬','england':'🏴󠁧󠁢󠁥󠁮󠁧󠁿','france':'🇫🇷','germany':'🇩🇪',
   'ghana':'🇬🇭','haiti':'🇭🇹','honduras':'🇭🇳','hungary':'🇭🇺',
   'iran':'🇮🇷','iraq':'🇮🇶','ivory-coast':'🇨🇮','jamaica':'🇯🇲',
@@ -328,7 +321,7 @@ function buildStreamUrl(slugA, slugB) {
 
 // ── CLOCK ─────────────────────────────────────────────────────
 function updateClock() {
-  const t = new Date().toLocaleTimeString('ar-MA', { hour:'2-digit', minute:'2-digit', second:'2-digit', timeZone:'Africa/Casablanca' });
+  const t = new Date().toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit', second:'2-digit', timeZone:'Africa/Casablanca' });
   document.getElementById('sbClock').textContent = t;
 }
 setInterval(updateClock, 1000);
@@ -351,7 +344,7 @@ function renderTab() {
   const scroll = document.getElementById('matchesScroll');
   if (!list.length) {
     scroll.innerHTML = '<div class="empty">' +
-      (currentTab === 'live' ? 'لا توجد مباريات مباشرة حالياً' : 'لا توجد مباريات قادمة') + '</div>';
+      (currentTab === 'live' ? 'No live matches right now' : 'No upcoming matches') + '</div>';
     return;
   }
   scroll.innerHTML = list.map((m, i) => buildCard(m, i)).join('');
@@ -367,10 +360,10 @@ function buildCard(m, i) {
   const badge = isLive
     ? `<span class="badge-live">● LIVE</span>`
     : isEnded
-    ? `<span class="badge-ended">انتهت</span>`
+    ? `<span class="badge-ended">Ended</span>`
     : `<span class="badge-time">${m.time}</span>`;
 
-  const noStreamTag = !hasStream ? `<div class="no-stream-tag">⚠ بدون رابط</div>` : '';
+  const noStreamTag = !hasStream ? `<div class="no-stream-tag">⚠ No stream</div>` : '';
 
   const scoreA = (isLive || isEnded) && m.scoreA !== '' ? `<span class="mcard-goal">${m.scoreA}</span>` : '';
   const scoreB = (isLive || isEnded) && m.scoreB !== '' ? `<span class="mcard-goal">${m.scoreB}</span>` : '';
@@ -461,13 +454,13 @@ function normTime(raw) {
   if (ap === 'PM' && h < 12) h += 12;
   if (ap === 'AM' && h === 12) h = 0;
   // site is UTC+1 (already Morocco time in most cases, but we keep it as-is)
-  const p = h >= 12 ? 'م' : 'ص';
+  const p = h >= 12 ? 'PM' : 'AM';
   const h12 = h > 12 ? h - 12 : (h === 0 ? 12 : h);
   return String(h12).padStart(2,'0') + ':' + min + ' ' + p;
 }
 
 async function fetchMatches() {
-  document.getElementById('refreshLabel').textContent = 'جاري التحديث...';
+  document.getElementById('refreshLabel').textContent = 'Refreshing…';
   try {
     const res = await fetch(PROXY + encodeURIComponent(SOURCE));
     if (!res.ok) throw new Error('network');
@@ -483,7 +476,7 @@ async function fetchMatches() {
   } catch(e) {
     document.getElementById('sbLoading').style.display = 'none';
     document.getElementById('matchesScroll').innerHTML =
-      '<div class="empty">تعذّر التحميل<br><small>تأكد من الاتصال</small></div>';
+      '<div class="empty">Failed to load matches<br><small>Check your connection</small></div>';
   }
   startCountdown();
 }
@@ -547,7 +540,7 @@ function startCountdown() {
   cdTimer = setInterval(() => {
     countdown--;
     document.getElementById('refreshLabel').textContent =
-      countdown > 0 ? 'تجديد خلال ' + countdown + ' ث' : 'جاري التحديث...';
+      countdown > 0 ? 'Refreshing in ' + countdown + 's' : 'Refreshing…';
     if (countdown <= 0) { clearInterval(cdTimer); fetchMatches(); }
   }, 1000);
 }
