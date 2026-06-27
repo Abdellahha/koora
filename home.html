@@ -25,266 +25,58 @@
   <link rel="manifest" href="manifest.json">
   <title>Koora Live</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&display=swap');
-
     :root {
       --bg: #000;
-      --glass: rgba(255,255,255,0.08);
-      --glass-border: rgba(255,255,255,0.18);
-      --glass-hover: rgba(255,255,255,0.13);
-      --glass-shine: rgba(255,255,255,0.25);
+      --panel: #141416;
+      --border: rgba(255,255,255,0.14);
       --text: #fff;
       --text-secondary: rgba(255,255,255,0.55);
       --red: #ff3b30;
-      --red-glow: rgba(255,59,48,0.4);
       --blue: #0a84ff;
-      --blue-glow: rgba(10,132,255,0.4);
       --green: #30d158;
-      --purple: #bf5af2;
-      --orange: #ff9f0a;
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
 
-    html, body {
-      height: 100%;
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      -webkit-font-smoothing: antialiased;
-      overflow-x: hidden;
-    }
+    .bg-ambient { display: none; }
 
-    /* Ambient background blobs */
-    .bg-ambient {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      overflow: hidden;
-      pointer-events: none;
-    }
-    .blob {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(80px);
-      opacity: 0.35;
-      animation: drift 18s ease-in-out infinite alternate;
-    }
-    .blob-1 { width: 500px; height: 500px; background: radial-gradient(circle, #ff3b30, transparent); top: -150px; left: -100px; animation-delay: 0s; }
-    .blob-2 { width: 400px; height: 400px; background: radial-gradient(circle, #0a84ff, transparent); top: 10%; right: -100px; animation-delay: -6s; }
-    .blob-3 { width: 350px; height: 350px; background: radial-gradient(circle, #bf5af2, transparent); bottom: 0; left: 30%; animation-delay: -12s; }
-    @keyframes drift {
-      from { transform: translate(0, 0) scale(1); }
-      to   { transform: translate(30px, 20px) scale(1.08); }
-    }
+    .wrap { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100dvh; padding: max(40px, env(safe-area-inset-top)) 20px max(40px, env(safe-area-inset-bottom)); text-align: center; }
 
-    .wrap {
-      position: relative;
-      z-index: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100dvh;
-      padding: max(40px, env(safe-area-inset-top)) 20px max(40px, env(safe-area-inset-bottom));
-      text-align: center;
-    }
+    .logo-mark { width: 80px; height: 80px; border-radius: 22px; background: var(--panel); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 36px; margin: 0 auto 24px; }
 
-    /* Logo mark */
-    .logo-mark {
-      width: 80px; height: 80px;
-      border-radius: 22px;
-      background: linear-gradient(145deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.06) 100%);
-      border: 1px solid var(--glass-border);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.3);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 36px;
-      margin: 0 auto 24px;
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-    }
+    .title { font-size: clamp(28px, 6vw, 42px); font-weight: 700; letter-spacing: -0.5px; color: #fff; margin-bottom: 8px; }
+    .subtitle { color: var(--text-secondary); font-size: 15px; font-weight: 400; margin-bottom: 52px; letter-spacing: 0.1px; }
 
-    .title {
-      font-size: clamp(28px, 6vw, 42px);
-      font-weight: 700;
-      letter-spacing: -0.5px;
-      background: linear-gradient(135deg, #fff 30%, rgba(255,255,255,0.6));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 8px;
-    }
+    .cards { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; max-width: 860px; width: 100%; }
 
-    .subtitle {
-      color: var(--text-secondary);
-      font-size: 15px;
-      font-weight: 400;
-      margin-bottom: 52px;
-      letter-spacing: 0.1px;
-    }
+    .card { width: 260px; padding: 28px 22px 24px; border-radius: 20px; background: var(--panel); border: 1px solid var(--border); cursor: pointer; text-decoration: none; color: var(--text); display: flex; flex-direction: column; align-items: center; gap: 12px; transition: background 0.2s ease, border-color 0.2s ease; }
+    .card:hover { background: #1c1c1f; border-color: rgba(255,255,255,0.22); }
+    .card:active { opacity: 0.9; }
 
-    .cards {
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-      justify-content: center;
-      max-width: 860px;
-      width: 100%;
-    }
+    .card-icon { width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+    .icon-red { background: var(--red); }
+    .icon-blue { background: var(--blue); }
 
-    /* Liquid Glass Card */
-    .card {
-      width: 260px;
-      padding: 28px 22px 24px;
-      border-radius: 24px;
-      background: linear-gradient(145deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.04) 100%);
-      border: 1px solid rgba(255,255,255,0.15);
-      box-shadow:
-        0 20px 60px rgba(0,0,0,0.45),
-        0 1px 0 rgba(255,255,255,0.22) inset,
-        0 -1px 0 rgba(0,0,0,0.3) inset;
-      backdrop-filter: blur(40px) saturate(180%);
-      -webkit-backdrop-filter: blur(40px) saturate(180%);
-      cursor: pointer;
-      text-decoration: none;
-      color: var(--text);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease, background 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
+    .card h2 { font-size: 17px; font-weight: 600; letter-spacing: -0.2px; text-align: center; }
+    .card p { font-size: 12px; color: var(--text-secondary); text-align: center; line-height: 1.4; }
 
-    /* Glass shine sweep */
-    .card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: -60%;
-      width: 50%; height: 100%;
-      background: linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%);
-      transition: left 0.5s ease;
-      pointer-events: none;
-    }
-    .card:hover::before { left: 110%; }
-
-    .card:hover {
-      transform: translateY(-6px) scale(1.02);
-      box-shadow:
-        0 30px 80px rgba(0,0,0,0.55),
-        0 1px 0 rgba(255,255,255,0.28) inset,
-        0 -1px 0 rgba(0,0,0,0.4) inset;
-      background: linear-gradient(145deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.06) 100%);
-    }
-
-    .card:active { transform: translateY(-2px) scale(0.99); }
-
-    /* Card icon */
-    .card-icon {
-      width: 56px; height: 56px;
-      border-radius: 16px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 24px;
-      position: relative;
-      flex-shrink: 0;
-    }
-    .card-icon::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,0.3);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.4);
-    }
-    .icon-red { background: linear-gradient(145deg, rgba(255,59,48,0.7), rgba(255,59,48,0.3)); box-shadow: 0 6px 20px rgba(255,59,48,0.4); }
-    .icon-blue { background: linear-gradient(145deg, rgba(10,132,255,0.7), rgba(10,132,255,0.3)); box-shadow: 0 6px 20px rgba(10,132,255,0.4); }
-
-    .card h2 {
-      font-size: 17px;
-      font-weight: 600;
-      letter-spacing: -0.2px;
-      text-align: center;
-    }
-    .card p {
-      font-size: 12px;
-      color: var(--text-secondary);
-      text-align: center;
-      line-height: 1.4;
-    }
-
-    /* Glass pill badge */
-    .pill {
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.8px;
-      text-transform: uppercase;
-      padding: 5px 12px;
-      border-radius: 20px;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.18);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-    }
+    .pill { font-size: 10px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; padding: 5px 12px; border-radius: 20px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); }
     .pill-red { color: #ff6b6b; border-color: rgba(255,59,48,0.4); background: rgba(255,59,48,0.12); }
     .pill-blue { color: #6bb5ff; border-color: rgba(10,132,255,0.4); background: rgba(10,132,255,0.12); }
 
-    /* Live indicator */
-    .live-row {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 11px;
-      color: var(--text-secondary);
-    }
-    .live-dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      background: #30d158;
-      box-shadow: 0 0 6px #30d158;
-      animation: livepulse 1.8s ease-in-out infinite;
-    }
-    @keyframes livepulse {
-      0%, 100% { opacity: 1; box-shadow: 0 0 6px #30d158; }
-      50% { opacity: 0.6; box-shadow: 0 0 12px #30d158; }
-    }
+    .live-row { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-secondary); }
+    .live-dot { width: 7px; height: 7px; border-radius: 50%; background: #30d158; }
 
-    .footer-note {
-      margin-top: 48px;
-      color: rgba(255,255,255,0.25);
-      font-size: 12px;
-      letter-spacing: 0.2px;
-    }
+    .footer-note { margin-top: 48px; color: rgba(255,255,255,0.25); font-size: 12px; letter-spacing: 0.2px; }
 
     @media (max-width: 600px) {
       .cards { gap: 14px; }
       .card { width: 100%; max-width: 320px; }
     }
-    :focus-visible, .channel:focus, .glass-btn:focus, .card:focus, .team-btn:focus, .watch-btn:focus, .dd-item:focus, .back-link:focus { outline: 3px solid #ff3b30 !important; outline-offset: 2px; box-shadow: 0 0 0 5px rgba(255,59,48,0.35) !important; }
-  /* ===== TV-only performance mode: kills heavy blur/animation just for
-     smart-TV browsers. PC and phone are untouched and keep full effects. ===== */
-  html.tv-mode * { animation: none !important; transition-duration: .15s !important; }
-  html.tv-mode .sidebar, html.tv-mode .topbar, html.tv-mode .glass-btn,
-  html.tv-mode .ch-badge, html.tv-mode .team-badge, html.tv-mode .loading-overlay,
-  html.tv-mode .backdrop, html.tv-mode .card, html.tv-mode .pill,
-  html.tv-mode .logo-mark, html.tv-mode .logo-pill {
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    box-shadow: none !important;
-  }
-  html.tv-mode .bg-glow, html.tv-mode .blob, html.tv-mode .bg-ambient { display: none !important; }
-  html.tv-mode .channel.active .live-dot, html.tv-mode .live-dot { animation: none !important; opacity: 1 !important; }
-  html.tv-mode .card::before { display: none !important; }
-
+    :focus-visible, .channel:focus, .glass-btn:focus, .card:focus, .team-btn:focus, .watch-btn:focus, .dd-item:focus, .back-link:focus { outline: 2px solid #ff3b30 !important; outline-offset: 2px; }
 </style>
   </head>
   <body>
-
-  <div class="bg-ambient">
-    <div class="blob blob-1"></div>
-    <div class="blob blob-2"></div>
-    <div class="blob blob-3"></div>
-  </div>
 
   <div class="wrap">
     <div class="logo-mark">⚽</div>
