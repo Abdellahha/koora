@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Koora Live">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#000000">
+<link rel="manifest" href="manifest.json">
+<title>Today's Matches — Koora Live</title>
+<style>
+  :root {
+    --border: rgba(255,255,255,0.14);
+    --text: #fff;
+    --muted: rgba(255,255,255,0.55);
+    --blue: #0a84ff;
+    --green: #30d158;
+    --amber: #ff9f0a;
+    --red: #ff3b30;
+    --panel: #141416;
+    --panel-2: #1b1c1f;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { min-height: 100%; background: #000; color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; -webkit-font-smoothing: antialiased; }
+
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: max(16px, env(safe-area-inset-top)) 20px 16px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: #000; z-index: 10; }
+  .back-link { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 14px; text-decoration: none; }
+  .back-link:hover { color: var(--text); }
+  .back-arrow { width: 28px; height: 28px; border-radius: 8px; background: var(--panel); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 13px; }
+  .topbar h1 { font-size: 17px; font-weight: 600; }
+  .refresh-note { font-size: 11px; color: var(--muted); }
+
+  .wrap { max-width: 980px; margin: 0 auto; padding: 24px 18px 60px; }
+
+  .day-label { font-size: 12px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase; color: var(--muted); margin: 24px 4px 12px; }
+  .day-label:first-child { margin-top: 0; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 14px; }
+
+  .match-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    text-decoration: none;
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+  .match-card:hover { background: var(--panel-2); border-color: rgba(255,255,255,0.24); }
+  .match-card:active { opacity: 0.88; }
+
+  .mc-top { display: flex; align-items: center; justify-content: space-between; }
+  .mc-status { font-size: 10px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; padding: 3px 9px; border-radius: 20px; }
+  .status-live { background: rgba(255,59,48,0.16); color: #ff6b6b; border: 1px solid rgba(255,59,48,0.4); }
+  .status-upcoming { background: rgba(255,159,10,0.14); color: #ffb340; border: 1px solid rgba(255,159,10,0.35); }
+  .status-finished { background: rgba(255,255,255,0.07); color: var(--muted); border: 1px solid var(--border); }
+  .mc-time { font-size: 12px; color: var(--muted); }
+
+  .mc-teams { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .mc-team { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; min-width: 0; }
+  .mc-team .flag { font-size: 30px; line-height: 1; }
+  .mc-team .name { font-size: 13px; font-weight: 600; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+
+  .mc-score { font-size: 18px; font-weight: 700; color: var(--text); min-width: 50px; text-align: center; flex-shrink: 0; }
+  .mc-vs { font-size: 11px; color: var(--muted); font-weight: 700; letter-spacing: 1px; min-width: 50px; text-align: center; flex-shrink: 0; }
+
+  .mc-watch { margin-top: 2px; padding: 9px; border-radius: 10px; background: var(--blue); color: #fff; font-size: 13px; font-weight: 600; text-align: center; }
+  .match-card.status-is-finished .mc-watch { background: var(--panel-2); color: var(--muted); }
+
+  .empty-note { color: var(--muted); font-size: 13px; text-align: center; padding: 40px 0; }
+
+  :focus-visible { outline: 2px solid #ff3b30 !important; outline-offset: 2px; }
+
+  @media (max-width: 480px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="home.html" class="back-link"><div class="back-arrow">←</div>Back to Home</a>
+  <h1>Today's Matches</h1>
+  <span class="refresh-note" id="refreshNote"></span>
+</div>
+
+<div class="wrap">
+  <div id="dayLabel" class="day-label">Today</div>
+  <div class="grid" id="grid"></div>
+  <div class="empty-note" id="emptyNote" style="display:none;">No matches listed right now.</div>
+</div>
+
+<script>
+  // ---- Match data -------------------------------------------------------
+  // Each match links straight into player2.html using the same team-slug
+  // scheme player2 already uses (WC_TEAMS slugs), so "Watch" opens the
+  // real stream immediately — no manual team picking needed.
+  //
+  // NOTE: a static page cannot pull this list live from another website
+  // in real time (browsers block that kind of cross-site request). This
+  // array is a manually-refreshed snapshot — update it here, or just ask
+  // for a refresh and the list gets pulled in again.
+  const MATCHES = [
+    { home: "Croatia",        homeSlug: "croatia",      homeFlag: "🇭🇷",
+      away: "Ghana",          awaySlug: "ghana",        awayFlag: "🇬🇭",
+      time: "10:00 PM", status: "live",     score: "1-0" },
+
+    { home: "Panama",         homeSlug: "panama",       homeFlag: "🇵🇦",
+      away: "England",        awaySlug: "england",      awayFlag: "🏴",
+      time: "10:00 PM", status: "live",     score: "0-2" },
+
+    { home: "DR Congo",       homeSlug: "dr-congo",     homeFlag: "🇨🇩",
+      away: "Uzbekistan",     awaySlug: "uzbekistan",   awayFlag: "🇺🇿",
+      time: "12:30 AM", status: "upcoming", score: "" },
+
+    { home: "Colombia",       homeSlug: "colombia",     homeFlag: "🇨🇴",
+      away: "Portugal",       awaySlug: "portugal",     awayFlag: "🇵🇹",
+      time: "12:30 AM", status: "upcoming", score: "" },
+
+    { home: "Uruguay",        homeSlug: "uruguay",      homeFlag: "🇺🇾",
+      away: "Spain",          awaySlug: "spain",        awayFlag: "🇪🇸",
+      time: "01:00 AM", status: "finished", score: "0-1" },
+
+    { home: "Cape Verde",     homeSlug: "cape-verde",   homeFlag: "🇨🇻",
+      away: "Saudi Arabia",   awaySlug: "saudi-arabia", awayFlag: "🇸🇦",
+      time: "01:00 AM", status: "finished", score: "" },
+
+    { home: "Egypt",          homeSlug: "egypt",        homeFlag: "🇪🇬",
+      away: "Iran",           awaySlug: "iran",         awayFlag: "🇮🇷",
+      time: "04:00 AM", status: "finished", score: "1-1" },
+
+    { home: "New Zealand",    homeSlug: "new-zealand",  homeFlag: "🇳🇿",
+      away: "Belgium",        awaySlug: "belgium",      awayFlag: "🇧🇪",
+      time: "04:00 AM", status: "finished", score: "1-5" },
+  ];
+
+  const STATUS_LABEL = { live: "Live", upcoming: "Upcoming", finished: "Finished" };
+
+  function render() {
+    const grid = document.getElementById('grid');
+    const emptyNote = document.getElementById('emptyNote');
+    grid.innerHTML = '';
+    if (!MATCHES.length) { emptyNote.style.display = 'block'; return; }
+    emptyNote.style.display = 'none';
+
+    MATCHES.forEach(m => {
+      const card = document.createElement('a');
+      card.className = 'match-card status-is-' + m.status;
+      card.href = `player2.html?a=${m.homeSlug}&b=${m.awaySlug}`;
+      card.innerHTML = `
+        <div class="mc-top">
+          <span class="mc-status status-${m.status}">${STATUS_LABEL[m.status] || m.status}</span>
+          <span class="mc-time">${m.time}</span>
+        </div>
+        <div class="mc-teams">
+          <div class="mc-team"><span class="flag">${m.homeFlag}</span><span class="name">${m.home}</span></div>
+          ${m.score ? `<div class="mc-score">${m.score}</div>` : `<div class="mc-vs">VS</div>`}
+          <div class="mc-team"><span class="flag">${m.awayFlag}</span><span class="name">${m.away}</span></div>
+        </div>
+        <div class="mc-watch">${m.status === 'finished' ? 'Watch Replay' : 'Watch Now'}</div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  document.getElementById('refreshNote').textContent =
+    'Updated ' + new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+
+  render();
+</script>
+<script src="tv-nav.js"></script>
+</body>
+</html>

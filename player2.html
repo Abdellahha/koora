@@ -455,6 +455,22 @@
 
   renderList('A', WC_TEAMS);
   renderList('B', WC_TEAMS);
+
+  // Deep-link support: player2.html?a=team-slug&b=team-slug auto-picks both
+  // teams and starts the stream immediately (used by matches.html cards).
+  (function autoStartFromQuery(){
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const aSlug = params.get('a'), bSlug = params.get('b');
+      if (!aSlug || !bSlug) return;
+      const teamA = WC_TEAMS.find(t => t.slug === aSlug);
+      const teamB = WC_TEAMS.find(t => t.slug === bSlug);
+      if (!teamA || !teamB) return;
+      pickTeam('A', teamA);
+      pickTeam('B', teamB);
+      loadMatchup();
+    } catch (e) { console.warn('Deep-link auto-start failed:', e); }
+  })();
 </script>
 <script src="tv-nav.js"></script>
 </body>
