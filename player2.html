@@ -256,7 +256,7 @@
           <div class="ico">🏆</div>
           Pick two teams in the menu and hit Watch.
         </div>
-        <iframe id="videoIframe" src="" allowfullscreen webkit-allowfullscreen playsinline webkit-playsinline allow="autoplay; fullscreen; encrypted-media; picture-in-picture" sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"
+        <iframe id="videoIframe" src="" allowfullscreen webkit-allowfullscreen playsinline webkit-playsinline allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
           referrerpolicy="no-referrer" style="display:none;"></iframe>
       </div>
     </div>
@@ -375,7 +375,6 @@
     newIframe.setAttribute('webkit-playsinline', '');
     newIframe.setAttribute('allow', 'autoplay; fullscreen; encrypted-media; picture-in-picture');
     newIframe.setAttribute('referrerpolicy', 'no-referrer');
-    newIframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation allow-forms');
     newIframe.style.cssText = 'width:100%;height:100%;border:0;display:block;';
     newIframe.addEventListener('load', onIframeLoad);
     old.replaceWith(newIframe);
