@@ -29,7 +29,6 @@
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{width:100%;height:100%;background:#000;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Tahoma,sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden;}
-
 .app{display:flex;height:100dvh;width:100dvw;}
 
 /* ── SIDEBAR ─────────────────────────────── */
@@ -40,14 +39,22 @@ html,body{width:100%;height:100%;background:#000;color:var(--text);font-family:-
   display:flex;flex-direction:column;
   z-index:20;flex-shrink:0;overflow:hidden;
 }
-
 .sb-head{
-  padding:12px 16px 10px;
+  padding:10px 12px;
   border-bottom:1px solid var(--border);
   flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
 }
-.sb-clock{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.sb-home-btn{
+  height:30px;width:30px;border-radius:8px;
+  background:var(--panel2);border:1px solid var(--border);
+  color:var(--text);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;text-decoration:none;
+  transition:background .15s;flex-shrink:0;
+}
+.sb-home-btn:hover{background:rgba(255,255,255,0.1);}
+.sb-clock{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;flex:1;text-align:center;}
 
 .sb-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;}
 .sb-tab{
@@ -65,13 +72,13 @@ html,body{width:100%;height:100%;background:#000;color:var(--text);font-family:-
 }
 .sb-tab.tab-up .cnt{background:rgba(10,132,255,0.18);color:#6bb5ff;}
 
-.matches-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 8px;}
+.matches-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px;}
 .matches-scroll::-webkit-scrollbar{width:3px;}
 .matches-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px;}
 
 .refresh-bar{
   display:flex;align-items:center;justify-content:space-between;
-  padding:8px 14px 4px;font-size:10px;color:var(--muted);flex-shrink:0;
+  padding:6px 14px 4px;font-size:10px;color:var(--muted);flex-shrink:0;
 }
 .pulse{width:6px;height:6px;border-radius:50%;background:var(--red);animation:pulse 1.4s infinite;display:inline-block;}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(.7);}}
@@ -83,9 +90,11 @@ html,body{width:100%;height:100%;background:#000;color:var(--text);font-family:-
   display:flex;align-items:center;gap:8px;
   transition:border-color .15s,background .15s;
   position:relative;overflow:hidden;
+  outline:none;
 }
-.mcard:hover{border-color:rgba(255,255,255,0.22);background:var(--panel3);}
+.mcard:hover,.mcard.focused{border-color:rgba(255,255,255,0.28);background:var(--panel3);}
 .mcard.active{border-color:var(--blue);background:rgba(10,132,255,0.08);}
+.mcard.focused{border-color:rgba(255,255,255,0.5)!important;box-shadow:0 0 0 2px rgba(255,255,255,0.15);}
 .mcard.live-card{border-color:rgba(229,57,53,0.3);background:linear-gradient(135deg,#1a0e0e 0%,var(--panel2) 100%);}
 .mcard.live-card::after{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--red);border-radius:10px 0 0 10px;}
 .mcard.no-stream{opacity:.55;cursor:not-allowed;}
@@ -96,23 +105,19 @@ html,body{width:100%;height:100%;background:#000;color:var(--text);font-family:-
 .mcard-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .mcard-goal{font-variant-numeric:tabular-nums;font-weight:700;color:#fff;min-width:14px;text-align:center;}
 .mcard-vs{font-size:10px;color:var(--muted);padding:0 4px;}
-
 .mcard-meta{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;}
 .badge-live{font-size:9px;font-weight:700;letter-spacing:.8px;padding:2px 7px;border-radius:20px;background:var(--red);color:#fff;white-space:nowrap;}
 .badge-time{font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(10,132,255,0.15);color:#90caf9;border:1px solid rgba(10,132,255,0.25);white-space:nowrap;font-variant-numeric:tabular-nums;}
 .badge-ended{font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(255,255,255,0.06);color:var(--muted);}
-
 .no-stream-tag{font-size:9px;color:var(--muted);margin-top:1px;}
 .empty{padding:28px 10px;text-align:center;color:var(--muted);font-size:12px;line-height:1.7;}
 
-/* loading spinner in sidebar */
 .sb-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:40px 20px;color:var(--muted);font-size:12px;}
 .spin-sm{width:28px;height:28px;border:2px solid rgba(255,255,255,0.1);border-top-color:var(--red);border-radius:50%;animation:spin .8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 
 /* ── MAIN PLAYER ─────────────────────────── */
 .main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
-
 .topbar{
   display:flex;align-items:center;justify-content:space-between;
   padding:max(12px,env(safe-area-inset-top)) 18px 12px;
@@ -121,22 +126,49 @@ html,body{width:100%;height:100%;background:#000;color:var(--text);font-family:-
 .topbar-left{display:flex;align-items:center;gap:10px;}
 .now-playing h2{font-size:15px;font-weight:600;letter-spacing:-0.2px;}
 .live-badge{font-size:9px;font-weight:700;letter-spacing:.8px;padding:3px 9px;border-radius:20px;background:rgba(10,132,255,0.15);color:#6bb5ff;border:1px solid rgba(10,132,255,0.3);}
-.glass-btn{height:34px;width:34px;border-radius:10px;background:var(--panel2);border:1px solid var(--border);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;font-size:15px;}
+.glass-btn{height:34px;min-width:34px;padding:0 8px;border-radius:10px;background:var(--panel2);border:1px solid var(--border);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;font-size:15px;gap:5px;text-decoration:none;}
 .glass-btn:hover{background:rgba(255,255,255,0.1);}
+.glass-btn span{font-size:12px;font-weight:500;}
 .controls{display:flex;gap:7px;}
 
 .player-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:18px;background:#000;position:relative;}
 .player-frame{width:100%;height:100%;max-width:1600px;border-radius:14px;overflow:hidden;background:#000;border:1px solid var(--border);position:relative;}
 .player-frame iframe{width:100%;height:100%;border:0;display:block;opacity:0;transition:opacity .25s;}
 .player-frame iframe.show{opacity:1;}
-
 .loading-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;background:#080808;z-index:5;transition:opacity .2s;border-radius:14px;}
 .loading-overlay.hidden{opacity:0;pointer-events:none;}
 .spinner-ring{width:38px;height:38px;border-radius:50%;border:3px solid rgba(255,255,255,0.08);border-top-color:var(--blue);animation:spin .8s linear infinite;}
 .loading-text{font-size:12px;color:var(--muted);}
-
 .placeholder-msg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--muted);font-size:13px;text-align:center;padding:20px;line-height:1.7;}
 .placeholder-msg .ico{font-size:46px;margin-bottom:4px;}
+
+/* ── REMOTE CONTROL ─────────────────────── */
+.remote{
+  position:fixed;bottom:24px;right:24px;z-index:100;
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  opacity:0.85;transition:opacity .2s;
+}
+.remote:hover{opacity:1;}
+.remote-row{display:flex;gap:4px;align-items:center;justify-content:center;}
+.rbtn{
+  width:42px;height:42px;border-radius:12px;
+  background:rgba(24,24,28,0.95);border:1px solid rgba(255,255,255,0.15);
+  color:#fff;font-size:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .12s,transform .1s;
+  user-select:none;-webkit-user-select:none;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+}
+.rbtn:hover{background:rgba(255,255,255,0.12);}
+.rbtn:active{transform:scale(0.9);background:rgba(255,255,255,0.18);}
+.rbtn.rbtn-center{background:rgba(229,57,53,0.85);border-color:rgba(229,57,53,0.5);font-size:13px;font-weight:600;}
+.rbtn.rbtn-center:hover{background:rgba(229,57,53,1);}
+.remote-label{font-size:9px;color:rgba(255,255,255,0.3);letter-spacing:.5px;margin-top:2px;text-align:center;}
+
+/* ── TV FOCUS RING ───────────────────────── */
+.tv-mode .glass-btn:focus,.tv-mode .rbtn:focus,.tv-mode .mcard:focus{
+  outline:2px solid #ff3b30!important;outline-offset:2px;
+}
 
 .backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:15;}
 .menu-btn{display:none;}
@@ -147,6 +179,8 @@ html,body{width:100%;height:100%;background:#000;color:var(--text);font-family:-
   .backdrop.show{display:block;}
   .menu-btn{display:flex;}
   .player-wrap{padding:10px;}
+  .remote{bottom:16px;right:16px;}
+  .rbtn{width:38px;height:38px;font-size:14px;}
 }
 </style>
 </head>
@@ -159,6 +193,7 @@ html,body{width:100%;height:100%;background:#000;color:var(--text);font-family:-
     <div class="topbar">
       <div class="topbar-left">
         <button class="glass-btn menu-btn" id="menuBtn">☰</button>
+        <a class="glass-btn" href="home.html" title="Home">🏠 <span>Home</span></a>
         <div class="now-playing">
           <h2 id="channelTitle">Live Matches</h2>
           <span class="live-badge" id="liveBadge" style="display:none">LIVE</span>
@@ -193,7 +228,8 @@ html,body{width:100%;height:100%;background:#000;color:var(--text);font-family:-
   <!-- SIDEBAR: MATCHES -->
   <aside class="sidebar" id="sidebar">
     <div class="sb-head">
-      <div class="sb-clock" id="sbClock">--:--</div>
+      <a class="sb-home-btn" href="home.html" title="Home">🏠</a>
+      <div class="sb-clock" id="sbClock">--:--:--</div>
     </div>
 
     <div class="sb-tabs">
@@ -219,6 +255,22 @@ html,body{width:100%;height:100%;background:#000;color:var(--text);font-family:-
   </aside>
 </div>
 
+<!-- REMOTE CONTROL -->
+<div class="remote" id="remote">
+  <div class="remote-row">
+    <button class="rbtn" id="rUp" title="Up (↑)">▲</button>
+  </div>
+  <div class="remote-row">
+    <button class="rbtn" id="rLeft" title="Prev tab (←)">◀</button>
+    <button class="rbtn rbtn-center" id="rOk" title="Select (Enter)">OK</button>
+    <button class="rbtn" id="rRight" title="Next tab (→)">▶</button>
+  </div>
+  <div class="remote-row">
+    <button class="rbtn" id="rDown" title="Down (↓)">▼</button>
+  </div>
+  <div class="remote-label">D-PAD</div>
+</div>
+
 <script>
 // ── AD / POPUP GUARD ──────────────────────────────────────────
 window.open = function(url){ console.warn('Popup blocked:',url); return null; };
@@ -237,16 +289,15 @@ window.addEventListener('pagehide', function(){ guardActive=false; });
 document.addEventListener('auxclick', function(e){ if(e.button===1){ e.preventDefault(); e.stopPropagation(); } }, true);
 setInterval(function(){ if(guardActive && document.visibilityState==='visible' && !document.hasFocus()) window.focus(); }, 400);
 
-// ── TEAM SLUG MAP (Arabic → slug) ─────────────────────────────
+// ── TEAM SLUG MAP ─────────────────────────────────────────────
 const SLUG_MAP = {
-  // Arabic full names
   'الجزائر':'algeria','الأرجنتين':'argentina','أستراليا':'australia',
   'النمسا':'austria','بلجيكا':'belgium','بوليفيا':'bolivia',
   'البوسنة والهرسك':'bosnia-herzegovina','البرازيل':'brazil',
   'الكاميرون':'cameroon','كندا':'canada','الرأس الأخضر':'cape-verde',
   'تشيلي':'chile','كولومبيا':'colombia','كوستاريكا':'costa-rica',
   'كرواتيا':'croatia','كوراكاو':'curacao','التشيك':'czechia',
-  'الدنمارك':'denmark','الكونغو الديمقراطية':'congo-dr','الإكوادور':'ecuador',
+  'الدنمارك':'denmark','الكونغو الديمقراطية':'dr-congo','الإكوادور':'ecuador',
   'مصر':'egypt','إنجلترا':'england','فرنسا':'france','ألمانيا':'germany',
   'غانا':'ghana','هايتي':'haiti','هندوراس':'honduras','المجر':'hungary',
   'إيران':'iran','العراق':'iraq','ساحل العاج':'ivory-coast',
@@ -261,7 +312,6 @@ const SLUG_MAP = {
   'ترينيداد وتوباغو':'trinidad-and-tobago','تونس':'tunisia',
   'تركيا':'turkey','أوكرانيا':'ukraine','الولايات المتحدة':'united-states',
   'أوروغواي':'uruguay','أوزبكستان':'uzbekistan','فنزويلا':'venezuela',
-  // English fallbacks
   'algeria':'algeria','argentina':'argentina','australia':'australia',
   'austria':'austria','belgium':'belgium','bolivia':'bolivia',
   'brazil':'brazil','cameroon':'cameroon','canada':'canada',
@@ -279,13 +329,12 @@ const SLUG_MAP = {
   'tunisia':'tunisia','turkey':'turkey','ukraine':'ukraine',
   'uruguay':'uruguay','venezuela':'venezuela',
 };
-
 const FLAGS = {
   'algeria':'🇩🇿','argentina':'🇦🇷','australia':'🇦🇺','austria':'🇦🇹',
   'belgium':'🇧🇪','bolivia':'🇧🇴','bosnia-herzegovina':'🇧🇦','brazil':'🇧🇷',
   'cameroon':'🇨🇲','canada':'🇨🇦','cape-verde':'🇨🇻','chile':'🇨🇱',
   'colombia':'🇨🇴','costa-rica':'🇨🇷','croatia':'🇭🇷','curacao':'🇨🇼',
-  'czechia':'🇨🇿','denmark':'🇩🇰','congo-dr':'🇨🇩','ecuador':'🇪🇨',
+  'czechia':'🇨🇿','denmark':'🇩🇰','dr-congo':'🇨🇩','ecuador':'🇪🇨',
   'egypt':'🇪🇬','england':'🏴󠁧󠁢󠁥󠁮󠁧󠁿','france':'🇫🇷','germany':'🇩🇪',
   'ghana':'🇬🇭','haiti':'🇭🇹','honduras':'🇭🇳','hungary':'🇭🇺',
   'iran':'🇮🇷','iraq':'🇮🇶','ivory-coast':'🇨🇮','jamaica':'🇯🇲',
@@ -298,26 +347,20 @@ const FLAGS = {
   'turkey':'🇹🇷','ukraine':'🇺🇦','united-states':'🇺🇸','uruguay':'🇺🇾',
   'uzbekistan':'🇺🇿','venezuela':'🇻🇪',
 };
-
 const BASE_URL = 'https://embed.st/embed/admin/ppv-';
 
 function toSlug(name) {
   if (!name) return null;
   const clean = name.trim();
   if (SLUG_MAP[clean]) return SLUG_MAP[clean];
-  // try lowercase
   const lo = clean.toLowerCase();
   if (SLUG_MAP[lo]) return SLUG_MAP[lo];
-  // partial match
   for (const [k, v] of Object.entries(SLUG_MAP)) {
     if (clean.includes(k) || k.includes(clean)) return v;
   }
   return null;
 }
-
-function buildStreamUrl(slugA, slugB) {
-  return BASE_URL + slugA + '-vs-' + slugB + '/7';
-}
+function buildStreamUrl(slugA, slugB) { return BASE_URL + slugA + '-vs-' + slugB + '/7'; }
 
 // ── CLOCK ─────────────────────────────────────────────────────
 function updateClock() {
@@ -331,11 +374,13 @@ updateClock();
 let currentTab = 'live';
 let allMatches = { live: [], upcoming: [] };
 let activeCard = null;
+let focusedIndex = -1;
 
 function showTab(tab) {
   currentTab = tab;
   document.getElementById('tabLive').classList.toggle('active', tab === 'live');
   document.getElementById('tabUp').classList.toggle('active', tab === 'upcoming');
+  focusedIndex = -1;
   renderTab();
 }
 
@@ -356,31 +401,25 @@ function buildCard(m, i) {
   const isEnded = m.status === 'ended';
   const flagA = (m.slugA && FLAGS[m.slugA]) || '⚽';
   const flagB = (m.slugB && FLAGS[m.slugB]) || '⚽';
-
   const badge = isLive
     ? `<span class="badge-live">● LIVE</span>`
     : isEnded
     ? `<span class="badge-ended">Ended</span>`
     : `<span class="badge-time">${m.time}</span>`;
-
   const noStreamTag = !hasStream ? `<div class="no-stream-tag">⚠ No stream</div>` : '';
-
   const scoreA = (isLive || isEnded) && m.scoreA !== '' ? `<span class="mcard-goal">${m.scoreA}</span>` : '';
   const scoreB = (isLive || isEnded) && m.scoreB !== '' ? `<span class="mcard-goal">${m.scoreB}</span>` : '';
-
   return `<div class="mcard ${isLive?'live-card':''} ${!hasStream?'no-stream':''}"
-    id="card-${i}" onclick="${hasStream ? 'loadMatch('+i+')' : ''}">
+    id="card-${i}" tabindex="${hasStream?'0':'-1'}" onclick="${hasStream?'loadMatch('+i+')':''}" onkeydown="if(event.key==='Enter'&&${hasStream}) loadMatch(${i})">
     <div class="mcard-teams">
       <div class="mcard-row">
         <span class="mcard-flag">${flagA}</span>
-        <span class="mcard-name">${m.home}</span>
-        ${scoreA}
+        <span class="mcard-name">${m.home}</span>${scoreA}
       </div>
       <div class="mcard-vs">vs</div>
       <div class="mcard-row">
         <span class="mcard-flag">${flagB}</span>
-        <span class="mcard-name">${m.away}</span>
-        ${scoreB}
+        <span class="mcard-name">${m.away}</span>${scoreB}
       </div>
       ${noStreamTag}
     </div>
@@ -392,22 +431,15 @@ function loadMatch(i) {
   const list = allMatches[currentTab];
   const m = list[i];
   if (!m || !m.slugA || !m.slugB) return;
-
-  // update active card highlight
   if (activeCard) activeCard.classList.remove('active');
   const card = document.getElementById('card-' + i);
   if (card) { card.classList.add('active'); activeCard = card; }
-
   const url = buildStreamUrl(m.slugA, m.slugB);
   document.getElementById('channelTitle').textContent = m.home + ' vs ' + m.away;
   document.getElementById('liveBadge').style.display = m.status === 'live' ? '' : 'none';
-
-  const placeholder = document.getElementById('placeholderMsg');
+  document.getElementById('placeholderMsg').style.display = 'none';
   const overlay = document.getElementById('loadingOverlay');
-  placeholder.style.display = 'none';
   overlay.classList.remove('hidden');
-
-  // Replace iframe to avoid reload artifacts
   const old = document.getElementById('videoIframe');
   const nf = document.createElement('iframe');
   nf.id = 'videoIframe';
@@ -423,49 +455,40 @@ function loadMatch(i) {
   });
   old.replaceWith(nf);
   nf.src = url;
-
   if (window.innerWidth <= 800) closeSidebar();
 }
 
-// ── FETCH & PARSE ─────────────────────────────────────────────
-const PROXY = 'https://api.allorigins.win/get?url=';
+// ── FETCH & PARSE (fast: 3 proxies in race) ───────────────────
+const PROXIES = [
+  url => 'https://corsproxy.io/?' + encodeURIComponent(url),
+  url => 'https://api.allorigins.win/get?url=' + encodeURIComponent(url),
+  url => 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url),
+];
 const SOURCE = 'https://koray-live.net/';
 let countdown = 60;
 let cdTimer = null;
 
-function detectStatus(text) {
-  const t = (text || '').toLowerCase();
-  if (/\d+'\s*$|مباشر|live|\blive\b/i.test(t)) return 'live';
-  if (/انته|ended|ft|نهاية|انتهت/i.test(t)) return 'ended';
-  return 'upcoming';
-}
-
-function parseScore(raw) {
-  const m = raw.match(/(\d+)\s*[-–]\s*(\d+)/);
-  return m ? { a: m[1], b: m[2] } : { a: '', b: '' };
-}
-
-function normTime(raw) {
-  // Convert any AM/PM time found in text
-  const m = raw.match(/(\d{1,2}):(\d{2})\s*(AM|PM|ص|م)?/i);
-  if (!m) return raw.replace(/لم تبدأ|بعد قليل/g,'').trim();
-  let h = parseInt(m[1]), min = m[2];
-  const ap = (m[3]||'').toUpperCase();
-  if (ap === 'PM' && h < 12) h += 12;
-  if (ap === 'AM' && h === 12) h = 0;
-  // site is UTC+1 (already Morocco time in most cases, but we keep it as-is)
-  const p = h >= 12 ? 'PM' : 'AM';
-  const h12 = h > 12 ? h - 12 : (h === 0 ? 12 : h);
-  return String(h12).padStart(2,'0') + ':' + min + ' ' + p;
+async function fetchWithProxy(proxyFn) {
+  const res = await fetch(proxyFn(SOURCE), { signal: AbortSignal.timeout(8000) });
+  if (!res.ok) throw new Error('bad status');
+  const ct = res.headers.get('content-type') || '';
+  if (ct.includes('json')) {
+    const j = await res.json();
+    return j.contents || j.data || '';
+  }
+  return await res.text();
 }
 
 async function fetchMatches() {
   document.getElementById('refreshLabel').textContent = 'Refreshing…';
+  let html = '';
+  // Race all proxies — first valid response wins
   try {
-    const res = await fetch(PROXY + encodeURIComponent(SOURCE));
-    if (!res.ok) throw new Error('network');
-    const data = await res.json();
-    const html = data.contents || '';
+    html = await Promise.any(PROXIES.map(fn => fetchWithProxy(fn)));
+  } catch(e) {
+    // All failed
+  }
+  if (html) {
     const parsed = parseHTML(html);
     allMatches.live = parsed.filter(m => m.status === 'live');
     allMatches.upcoming = parsed.filter(m => m.status === 'upcoming');
@@ -473,7 +496,7 @@ async function fetchMatches() {
     document.getElementById('cntUp').textContent = allMatches.upcoming.length;
     document.getElementById('sbLoading').style.display = 'none';
     renderTab();
-  } catch(e) {
+  } else {
     document.getElementById('sbLoading').style.display = 'none';
     document.getElementById('matchesScroll').innerHTML =
       '<div class="empty">Failed to load matches<br><small>Check your connection</small></div>';
@@ -484,54 +507,54 @@ async function fetchMatches() {
 function parseHTML(html) {
   const doc = new DOMParser().parseFromString(html, 'text/html');
   const matches = [];
-
-  // Extract all team names from img alt attributes and surrounding text
-  // The site renders: flag-img teamA | time score status | flag-img teamB
-  // We grab every <a> that links to a match page or external stream
   const blocks = doc.querySelectorAll('a[href*="watch"], a[href*="hes-goals"], a[href*="koraylive"]');
-
   blocks.forEach(link => {
-    // Walk up to find the containing match block
     const parent = link.closest('div, li, article, section') || link.parentElement;
     if (!parent) return;
-
     const imgs = parent.querySelectorAll('img');
     const texts = Array.from(parent.querySelectorAll('*'))
       .filter(el => el.children.length === 0 && el.textContent.trim())
-      .map(el => el.textContent.trim())
-      .filter(Boolean);
-
-    // Get team names from img alt
+      .map(el => el.textContent.trim()).filter(Boolean);
     const teamNames = Array.from(imgs)
-      .map(img => img.alt || img.getAttribute('title') || '')
-      .filter(n => n.length > 1);
-
+      .map(img => img.alt || img.getAttribute('title') || '').filter(n => n.length > 1);
     if (teamNames.length < 2) return;
-    const home = teamNames[0];
-    const away = teamNames[1];
-
-    // Find score / time in texts
+    const home = teamNames[0], away = teamNames[1];
     const scoreText = texts.find(t => /\d+-\d+/.test(t)) || '';
     const timeText = texts.find(t => /\d{1,2}:\d{2}/.test(t) || /انته|مباشر|بعد قليل|لم تبدأ/.test(t)) || '';
     const statusText = texts.find(t => /انته|مباشر|بعد قليل|لم تبدأ/.test(t)) || '';
-
     const { a: scoreA, b: scoreB } = parseScore(scoreText);
     const status = detectStatus(statusText || timeText || scoreText);
     const time = normTime(timeText || '');
-
-    const slugA = toSlug(home);
-    const slugB = toSlug(away);
-
-    matches.push({ home, away, slugA, slugB, scoreA, scoreB, time, status });
+    matches.push({ home, away, slugA: toSlug(home), slugB: toSlug(away), scoreA, scoreB, time, status });
   });
-
-  // Deduplicate
   const seen = new Set();
   return matches.filter(m => {
     const key = m.home + '|' + m.away;
     if (seen.has(key)) return false;
     seen.add(key); return true;
   });
+}
+
+function detectStatus(text) {
+  const t = (text || '').toLowerCase();
+  if (/\d+'\s*$|مباشر|live|\blive\b/i.test(t)) return 'live';
+  if (/انته|ended|ft|نهاية|انتهت/i.test(t)) return 'ended';
+  return 'upcoming';
+}
+function parseScore(raw) {
+  const m = raw.match(/(\d+)\s*[-–]\s*(\d+)/);
+  return m ? { a: m[1], b: m[2] } : { a: '', b: '' };
+}
+function normTime(raw) {
+  const m = raw.match(/(\d{1,2}):(\d{2})\s*(AM|PM|ص|م)?/i);
+  if (!m) return raw.replace(/لم تبدأ|بعد قليل/g,'').trim();
+  let h = parseInt(m[1]), min = m[2];
+  const ap = (m[3]||'').toUpperCase();
+  if (ap === 'PM' && h < 12) h += 12;
+  if (ap === 'AM' && h === 12) h = 0;
+  const p = h >= 12 ? 'PM' : 'AM';
+  const h12 = h > 12 ? h - 12 : (h === 0 ? 12 : h);
+  return String(h12).padStart(2,'0') + ':' + min + ' ' + p;
 }
 
 function startCountdown() {
@@ -544,6 +567,50 @@ function startCountdown() {
     if (countdown <= 0) { clearInterval(cdTimer); fetchMatches(); }
   }, 1000);
 }
+
+// ── KEYBOARD / REMOTE NAVIGATION ──────────────────────────────
+function getCards() {
+  return Array.from(document.querySelectorAll('.mcard:not(.no-stream)'));
+}
+function setFocus(idx) {
+  const cards = getCards();
+  cards.forEach((c,i) => c.classList.toggle('focused', i === idx));
+  if (cards[idx]) {
+    cards[idx].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    focusedIndex = idx;
+  }
+}
+function moveFocus(dir) {
+  const cards = getCards();
+  if (!cards.length) return;
+  let next = focusedIndex + dir;
+  if (next < 0) next = 0;
+  if (next >= cards.length) next = cards.length - 1;
+  setFocus(next);
+}
+function selectFocused() {
+  const cards = getCards();
+  if (focusedIndex >= 0 && cards[focusedIndex]) cards[focusedIndex].click();
+}
+
+document.addEventListener('keydown', function(e) {
+  switch(e.key) {
+    case 'ArrowDown':  e.preventDefault(); moveFocus(1); break;
+    case 'ArrowUp':    e.preventDefault(); moveFocus(-1); break;
+    case 'ArrowLeft':  e.preventDefault(); showTab('live'); break;
+    case 'ArrowRight': e.preventDefault(); showTab('upcoming'); break;
+    case 'Enter':      selectFocused(); break;
+    case 'Backspace':
+    case 'Escape':     guardActive=false; window.location.href='home.html'; break;
+  }
+});
+
+// Remote buttons
+document.getElementById('rUp').addEventListener('click',    () => moveFocus(-1));
+document.getElementById('rDown').addEventListener('click',  () => moveFocus(1));
+document.getElementById('rLeft').addEventListener('click',  () => showTab('live'));
+document.getElementById('rRight').addEventListener('click', () => showTab('upcoming'));
+document.getElementById('rOk').addEventListener('click',    () => selectFocused());
 
 // ── CONTROLS ──────────────────────────────────────────────────
 document.getElementById('reloadBtn').addEventListener('click', function() {
