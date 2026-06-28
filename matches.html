@@ -170,7 +170,7 @@ html,body{width:100%;height:100%;background:#000;color:var(--text);font-family:-
     <div class="topbar">
       <div class="topbar-left">
         <button class="glass-btn menu-btn" id="menuBtn">☰</button>
-        <a class="glass-btn" href="home.html" title="Home">🏠 <span>Home</span></a>
+        <a class="glass-btn" href="home.html" title="Home" onclick="if(window.adShieldDisarm) window.adShieldDisarm()">🏠 <span>Home</span></a>
         <div class="now-playing">
           <h2 id="channelTitle">Live Matches</h2>
           <span class="live-badge" id="liveBadge" style="display:none">LIVE</span>
@@ -205,7 +205,7 @@ html,body{width:100%;height:100%;background:#000;color:var(--text);font-family:-
   <!-- SIDEBAR: MATCHES -->
   <aside class="sidebar" id="sidebar">
     <div class="sb-head">
-      <a class="sb-home-btn" href="home.html" title="Home">🏠</a>
+      <a class="sb-home-btn" href="home.html" title="Home" onclick="if(window.adShieldDisarm) window.adShieldDisarm()">🏠</a>
       <div class="sb-clock" id="sbClock">--:--:--</div>
     </div>
 
@@ -234,21 +234,10 @@ html,body{width:100%;height:100%;background:#000;color:var(--text);font-family:-
 
 <script>
 // ── AD / POPUP GUARD ──────────────────────────────────────────
-window.open = function(url){ console.warn('Popup blocked:',url); return null; };
-document.addEventListener('click', function(e){
-  const a = e.target.closest('a');
-  if(a && a.target==='_blank'){ e.preventDefault(); e.stopPropagation(); }
-}, true);
-let guardActive = true;
-window.addEventListener('blur', function(){ if(!guardActive) return; setTimeout(function(){ if(guardActive) window.focus(); },0); });
-document.addEventListener('visibilitychange', function(){ if(guardActive && document.visibilityState==='visible') window.focus(); });
-window.addEventListener('beforeunload', function(e){ if(!guardActive) return; e.preventDefault(); e.returnValue=''; return ''; });
+// Handled by ad-shield.js (loaded at bottom). Just disarm on intentional nav.
 document.querySelectorAll('#reloadBtn,#fullscreenBtn,#menuBtn').forEach(function(el){
-  el.addEventListener('click', function(){ guardActive=false; }, true);
+  el.addEventListener('click', function(){ if(window.adShieldDisarm) window.adShieldDisarm(); }, true);
 });
-window.addEventListener('pagehide', function(){ guardActive=false; });
-document.addEventListener('auxclick', function(e){ if(e.button===1){ e.preventDefault(); e.stopPropagation(); } }, true);
-setInterval(function(){ if(guardActive && document.visibilityState==='visible' && !document.hasFocus()) window.focus(); }, 400);
 
 // ── TEAM SLUG MAP ─────────────────────────────────────────────
 const SLUG_MAP = {
@@ -625,6 +614,7 @@ document.getElementById('backdrop').addEventListener('click', closeSidebar);
 // ── BOOT ──────────────────────────────────────────────────────
 fetchMatches();
 </script>
+<script src="ad-shield.js"></script>
 <script src="tv-nav.js"></script>
 </body>
 </html>

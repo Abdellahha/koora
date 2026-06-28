@@ -176,50 +176,12 @@
 </div>
 
 <script>
-  const _origOpen = window.open.bind(window);
-  window.open = function(url, name, features) {
-    if (!url) return null;
-    const allowed = ['ntv.cx','ntvs.cx','youtube.com','youtu.be'];
-    try {
-      const host = new URL(url).hostname.replace(/^www\./, '');
-      if (allowed.some(d => host === d || host.endsWith('.'+d))) return null;
-    } catch(e) {}
-    console.warn('Popup blocked:', url);
-    return null;
-  };
-
-  // Popunder catcher + top-frame redirect guard (works without sandbox)
-  let guardActive = true;
-  window.addEventListener('blur', function () {
-    if (!guardActive) return;
-    setTimeout(function () { if (guardActive) window.focus(); }, 0);
-  });
-  document.addEventListener('visibilitychange', function () {
-    if (guardActive && document.visibilityState === 'visible') window.focus();
-  });
-  window.addEventListener('beforeunload', function (e) {
-    if (!guardActive) return;
-    e.preventDefault();
-    e.returnValue = '';
-    return '';
-  });
+  // Disarm ad-shield guard before any intentional navigation
   document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.back-link, #reloadBtn, #fullscreenBtn, #menuBtn').forEach(function (el) {
-      el.addEventListener('click', function () { guardActive = false; }, true);
+      el.addEventListener('click', function () { if(window.adShieldDisarm) window.adShieldDisarm(); }, true);
     });
   });
-  window.addEventListener('pagehide', function () { guardActive = false; });
-  // Middle-click / ctrl-click new-tab attempts on any link
-  document.addEventListener('auxclick', function (e) {
-    if (e.button === 1) { e.preventDefault(); e.stopPropagation(); }
-  }, true);
-  // Backup watchdog: some browsers don't reliably fire 'blur' for popunders,
-  // so also re-check focus a few times per second.
-  setInterval(function () {
-    if (guardActive && document.visibilityState === 'visible' && !document.hasFocus()) {
-      window.focus();
-    }
-  }, 400);
 
 
   document.addEventListener('click', function(e) {
@@ -312,6 +274,7 @@
   render();
   load(active);
 </script>
+<script src="ad-shield.js"></script>
 <script src="tv-nav.js"></script>
 </body>
 </html>
