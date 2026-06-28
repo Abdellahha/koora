@@ -142,32 +142,11 @@ html,body{width:100%;height:100%;background:#000;color:var(--text);font-family:-
 .placeholder-msg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--muted);font-size:13px;text-align:center;padding:20px;line-height:1.7;}
 .placeholder-msg .ico{font-size:46px;margin-bottom:4px;}
 
-/* ── REMOTE CONTROL ─────────────────────── */
-.remote{
-  position:fixed;bottom:24px;right:24px;z-index:100;
-  display:flex;flex-direction:column;align-items:center;gap:4px;
-  opacity:0.85;transition:opacity .2s;
-}
-.remote:hover{opacity:1;}
-.remote-row{display:flex;gap:4px;align-items:center;justify-content:center;}
-.rbtn{
-  width:42px;height:42px;border-radius:12px;
-  background:rgba(24,24,28,0.95);border:1px solid rgba(255,255,255,0.15);
-  color:#fff;font-size:16px;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  transition:background .12s,transform .1s;
-  user-select:none;-webkit-user-select:none;
-  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
-}
-.rbtn:hover{background:rgba(255,255,255,0.12);}
-.rbtn:active{transform:scale(0.9);background:rgba(255,255,255,0.18);}
-.rbtn.rbtn-center{background:rgba(229,57,53,0.85);border-color:rgba(229,57,53,0.5);font-size:13px;font-weight:600;}
-.rbtn.rbtn-center:hover{background:rgba(229,57,53,1);}
-.remote-label{font-size:9px;color:rgba(255,255,255,0.3);letter-spacing:.5px;margin-top:2px;text-align:center;}
-
-/* ── TV FOCUS RING ───────────────────────── */
-.tv-mode .glass-btn:focus,.tv-mode .rbtn:focus,.tv-mode .mcard:focus{
-  outline:2px solid #ff3b30!important;outline-offset:2px;
+:focus-visible,
+.mcard:focus, .glass-btn:focus, .sb-home-btn:focus,
+.sb-tab:focus, .card:focus, .back-link:focus, a:focus, button:focus {
+  outline: 2px solid #ff3b30 !important;
+  outline-offset: 2px;
 }
 
 .backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:15;}
@@ -179,8 +158,6 @@ html,body{width:100%;height:100%;background:#000;color:var(--text);font-family:-
   .backdrop.show{display:block;}
   .menu-btn{display:flex;}
   .player-wrap{padding:10px;}
-  .remote{bottom:16px;right:16px;}
-  .rbtn{width:38px;height:38px;font-size:14px;}
 }
 </style>
 </head>
@@ -253,22 +230,6 @@ html,body{width:100%;height:100%;background:#000;color:var(--text);font-family:-
       </div>
     </div>
   </aside>
-</div>
-
-<!-- REMOTE CONTROL -->
-<div class="remote" id="remote">
-  <div class="remote-row">
-    <button class="rbtn" id="rUp" title="Up (↑)">▲</button>
-  </div>
-  <div class="remote-row">
-    <button class="rbtn" id="rLeft" title="Prev tab (←)">◀</button>
-    <button class="rbtn rbtn-center" id="rOk" title="Select (Enter)">OK</button>
-    <button class="rbtn" id="rRight" title="Next tab (→)">▶</button>
-  </div>
-  <div class="remote-row">
-    <button class="rbtn" id="rDown" title="Down (↓)">▼</button>
-  </div>
-  <div class="remote-label">D-PAD</div>
 </div>
 
 <script>
@@ -374,13 +335,11 @@ updateClock();
 let currentTab = 'live';
 let allMatches = { live: [], upcoming: [] };
 let activeCard = null;
-let focusedIndex = -1;
 
 function showTab(tab) {
   currentTab = tab;
   document.getElementById('tabLive').classList.toggle('active', tab === 'live');
   document.getElementById('tabUp').classList.toggle('active', tab === 'upcoming');
-  focusedIndex = -1;
   renderTab();
 }
 
@@ -568,50 +527,6 @@ function startCountdown() {
   }, 1000);
 }
 
-// ── KEYBOARD / REMOTE NAVIGATION ──────────────────────────────
-function getCards() {
-  return Array.from(document.querySelectorAll('.mcard:not(.no-stream)'));
-}
-function setFocus(idx) {
-  const cards = getCards();
-  cards.forEach((c,i) => c.classList.toggle('focused', i === idx));
-  if (cards[idx]) {
-    cards[idx].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    focusedIndex = idx;
-  }
-}
-function moveFocus(dir) {
-  const cards = getCards();
-  if (!cards.length) return;
-  let next = focusedIndex + dir;
-  if (next < 0) next = 0;
-  if (next >= cards.length) next = cards.length - 1;
-  setFocus(next);
-}
-function selectFocused() {
-  const cards = getCards();
-  if (focusedIndex >= 0 && cards[focusedIndex]) cards[focusedIndex].click();
-}
-
-document.addEventListener('keydown', function(e) {
-  switch(e.key) {
-    case 'ArrowDown':  e.preventDefault(); moveFocus(1); break;
-    case 'ArrowUp':    e.preventDefault(); moveFocus(-1); break;
-    case 'ArrowLeft':  e.preventDefault(); showTab('live'); break;
-    case 'ArrowRight': e.preventDefault(); showTab('upcoming'); break;
-    case 'Enter':      selectFocused(); break;
-    case 'Backspace':
-    case 'Escape':     guardActive=false; window.location.href='home.html'; break;
-  }
-});
-
-// Remote buttons
-document.getElementById('rUp').addEventListener('click',    () => moveFocus(-1));
-document.getElementById('rDown').addEventListener('click',  () => moveFocus(1));
-document.getElementById('rLeft').addEventListener('click',  () => showTab('live'));
-document.getElementById('rRight').addEventListener('click', () => showTab('upcoming'));
-document.getElementById('rOk').addEventListener('click',    () => selectFocused());
-
 // ── CONTROLS ──────────────────────────────────────────────────
 document.getElementById('reloadBtn').addEventListener('click', function() {
   guardActive = false;
@@ -636,8 +551,80 @@ function closeSidebar() { document.getElementById('sidebar').classList.remove('o
 document.getElementById('menuBtn').addEventListener('click', ()=> document.getElementById('sidebar').classList.contains('open') ? closeSidebar() : openSidebar());
 document.getElementById('backdrop').addEventListener('click', closeSidebar);
 
+// ── FULL KEYBOARD / REMOTE NAVIGATION ────────────────────────
+// tv-nav.js handles spatial navigation across ALL focusable elements
+// (topbar buttons, home link, tabs, match cards).
+// We layer on top only the tab-switch shortcut: when focus is on a
+// match card, Left/Right switches between Live and Upcoming tabs.
+(function() {
+  // Make sure sb-tab buttons are keyboard-focusable
+  document.querySelectorAll('.sb-tab').forEach(function(btn) {
+    if (!btn.hasAttribute('tabindex')) btn.setAttribute('tabindex', '0');
+  });
+
+  function firstCard() {
+    return document.querySelector('#matchesScroll .mcard:not(.no-stream)');
+  }
+  function isOnTab(el) {
+    return el && (el.classList.contains('sb-tab') || el.classList.contains('sb-home-btn'));
+  }
+  function isOnCard(el) {
+    return el && el.classList.contains('mcard');
+  }
+
+  document.addEventListener('keydown', function(e) {
+    var active = document.activeElement;
+
+    // ↓ from any sidebar tab/home button → jump into first card
+    if (e.key === 'ArrowDown' && isOnTab(active)) {
+      var card = firstCard();
+      if (card) {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        card.focus();
+        card.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+      return;
+    }
+
+    // ↑ from first card → jump back to the active tab button
+    if (e.key === 'ArrowUp' && isOnCard(active)) {
+      var cards = document.querySelectorAll('#matchesScroll .mcard:not(.no-stream)');
+      if (cards.length && cards[0] === active) {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        var activeTab = document.querySelector('.sb-tab.active') || document.getElementById('tabLive');
+        activeTab.focus();
+      }
+      return;
+    }
+
+    // ← / → while on a card → switch tabs and focus first card
+    if (isOnCard(active)) {
+      if (e.key === 'ArrowLeft') {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        showTab('live');
+        setTimeout(function() {
+          var f = firstCard();
+          if (f) f.focus(); else document.getElementById('tabLive').focus();
+        }, 30);
+      } else if (e.key === 'ArrowRight') {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        showTab('upcoming');
+        setTimeout(function() {
+          var f = firstCard();
+          if (f) f.focus(); else document.getElementById('tabUp').focus();
+        }, 30);
+      }
+    }
+  }, true); // capture phase — runs before tv-nav.js
+})();
+
 // ── BOOT ──────────────────────────────────────────────────────
 fetchMatches();
 </script>
+<script src="tv-nav.js"></script>
 </body>
 </html>
