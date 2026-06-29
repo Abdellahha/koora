@@ -142,6 +142,37 @@ html,body{width:100%;height:100%;background:#000;color:var(--text);font-family:-
 .placeholder-msg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--muted);font-size:13px;text-align:center;padding:20px;line-height:1.7;}
 .placeholder-msg .ico{font-size:46px;margin-bottom:4px;}
 
+
+  /* ── AUTO-REFRESH OVERLAY ── */
+  #autoRefreshOverlay {
+    display:none; position:absolute; inset:0; z-index:10;
+    background:rgba(0,0,0,0.82); align-items:center; justify-content:center;
+    flex-direction:column; gap:14px; text-align:center; padding:24px; border-radius:14px;
+  }
+  #autoRefreshOverlay.show { display:flex; }
+  .ar-icon  { font-size:38px; }
+  .ar-title { font-size:16px; font-weight:600; color:#fff; }
+  .ar-sub   { font-size:13px; color:rgba(255,255,255,0.5); }
+  .ar-countdown {
+    font-size:36px; font-weight:700; color:var(--blue);
+    width:68px; height:68px; border-radius:50%;
+    border:3px solid rgba(10,132,255,0.35);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .ar-actions { display:flex; gap:10px; margin-top:4px; }
+  .ar-btn-now {
+    padding:9px 20px; border-radius:10px; border:none;
+    background:var(--blue); color:#fff; font-size:13px; font-weight:600;
+    font-family:inherit; cursor:pointer;
+  }
+  .ar-btn-now:hover { background:#2196ff; }
+  .ar-btn-cancel {
+    padding:9px 20px; border-radius:10px;
+    background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.18);
+    color:#fff; font-size:13px; font-family:inherit; cursor:pointer;
+  }
+  .ar-btn-cancel:hover { background:rgba(255,255,255,0.18); }
+
 :focus-visible,
 .mcard:focus, .glass-btn:focus, .sb-home-btn:focus,
 .sb-tab:focus, .card:focus, .back-link:focus, a:focus, button:focus {
@@ -404,6 +435,8 @@ function loadMatch(i) {
   old.replaceWith(nf);
   nf.src = url;
   if (window.innerWidth <= 800) closeSidebar();
+  // arm watchdog
+  setTimeout(function(){ if (window.arStart) window.arStart(); }, 1500);
 }
 
 // ── FETCH & PARSE (fast: 3 proxies in race) ───────────────────
@@ -525,6 +558,7 @@ document.getElementById('reloadBtn').addEventListener('click', function() {
     ifrm.classList.remove('show');
     ifrm.src = ifrm.src;
   }
+  if (window.arHeartbeat) window.arHeartbeat();
   setTimeout(()=>{ guardActive = true; }, 500);
 });
 document.getElementById('fullscreenBtn').addEventListener('click', function() {
@@ -609,6 +643,97 @@ document.getElementById('backdrop').addEventListener('click', closeSidebar);
       }
     }
   }, true); // capture phase — runs before tv-nav.js
+})();
+
+
+/* ── AUTO-REFRESH WATCHDOG ── */
+(function(){
+  var AR_SILENCE = 30000;
+  var AR_SECS    = 10;
+  var _active    = false;
+  var _silTimer  = null;
+  var _cdTimer   = null;
+  var _cdVal     = AR_SECS;
+
+  /* inject overlay HTML into player-frame */
+  var pf = document.getElementById('playerFrame');
+  if (pf) {
+    var ov = document.createElement('div');
+    ov.id = 'autoRefreshOverlay';
+    ov.innerHTML =
+      '<div class="ar-icon">📡</div>' +
+      '<div class="ar-title">Stream paused or stopped</div>' +
+      '<div class="ar-sub">Reloading automatically in…</div>' +
+      '<div class="ar-countdown" id="arCountdown">10</div>' +
+      '<div class="ar-actions">' +
+        '<button class="ar-btn-now" onclick="arReloadNow()">↺ Reload Now</button>' +
+        '<button class="ar-btn-cancel" onclick="arCancel()">✕ Cancel</button>' +
+      '</div>';
+    pf.appendChild(ov);
+  }
+
+  function arHide() {
+    clearInterval(_cdTimer);
+    var ov = document.getElementById('autoRefreshOverlay');
+    if (ov) ov.classList.remove('show');
+  }
+
+  function arTrigger() {
+    if (!_active) return;
+    var ov = document.getElementById('autoRefreshOverlay');
+    var cd = document.getElementById('arCountdown');
+    if (!ov || !cd) return;
+    _cdVal = AR_SECS; cd.textContent = _cdVal;
+    ov.classList.add('show');
+    clearInterval(_cdTimer);
+    _cdTimer = setInterval(function(){
+      _cdVal--; cd.textContent = _cdVal;
+      if (_cdVal <= 0) { clearInterval(_cdTimer); arReloadNow(); }
+    }, 1000);
+  }
+
+  window.arReloadNow = function() {
+    arHide();
+    var ifrm = document.getElementById('videoIframe');
+    if (!ifrm) return;
+    var lo = document.getElementById('loadingOverlay');
+    if (lo) lo.classList.remove('hidden');
+    ifrm.classList.remove('show');
+    var src = ifrm.src;
+    if (src && src !== 'about:blank' && src !== '') {
+      ifrm.src = ''; setTimeout(function(){ ifrm.src = src; arReset(); }, 150);
+    }
+  };
+
+  window.arCancel = function() {
+    arHide(); clearTimeout(_silTimer);
+    _silTimer = setTimeout(arTrigger, AR_SILENCE * 2);
+  };
+
+  function arReset() {
+    clearTimeout(_silTimer); arHide();
+    if (!_active) return;
+    _silTimer = setTimeout(arTrigger, AR_SILENCE);
+  }
+
+  window.arStart     = function() { _active = true; arReset(); };
+  window.arStop      = function() { _active = false; clearTimeout(_silTimer); arHide(); };
+  window.arHeartbeat = arReset;
+
+  /* watch for iframe load events (including when element is replaced) */
+  var obs = new MutationObserver(function(muts){
+    muts.forEach(function(m){
+      m.addedNodes.forEach(function(n){
+        if (n.id === 'videoIframe') {
+          n.addEventListener('load', function(){ if (_active) arReset(); });
+        }
+      });
+    });
+  });
+  var pf2 = document.getElementById('playerFrame');
+  if (pf2) obs.observe(pf2, { childList: true, subtree: true });
+  var ifrm0 = document.getElementById('videoIframe');
+  if (ifrm0) ifrm0.addEventListener('load', function(){ if (_active) arReset(); });
 })();
 
 // ── BOOT ──────────────────────────────────────────────────────
