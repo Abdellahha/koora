@@ -131,42 +131,10 @@
   </main>
 </div>
 <script>
-  window.open = function(url) { console.warn('Popup blocked:', url); return null; };
-  document.addEventListener('click', function(e) {
-    const a = e.target.closest('a');
-    if (a && a.target === '_blank') { e.preventDefault(); e.stopPropagation(); }
-  }, true);
-
-  // Popunder catcher + top-frame redirect guard (works without sandbox)
-  let guardActive = true;
-  window.addEventListener('blur', function () {
-    if (!guardActive) return;
-    setTimeout(function () { if (guardActive) window.focus(); }, 0);
-  });
-  document.addEventListener('visibilitychange', function () {
-    if (guardActive && document.visibilityState === 'visible') window.focus();
-  });
-  window.addEventListener('beforeunload', function (e) {
-    if (!guardActive) return;
-    e.preventDefault();
-    e.returnValue = '';
-    return '';
-  });
+  // Disarm ad-shield on intentional navigation
   document.querySelectorAll('.back-link, #reloadBtn, #fullscreenBtn, #menuBtn').forEach(function (el) {
-    el.addEventListener('click', function () { guardActive = false; }, true);
+    el.addEventListener('click', function () { if (window.adShieldDisarm) window.adShieldDisarm(); }, true);
   });
-  window.addEventListener('pagehide', function () { guardActive = false; });
-  // Middle-click / ctrl-click new-tab attempts on any link
-  document.addEventListener('auxclick', function (e) {
-    if (e.button === 1) { e.preventDefault(); e.stopPropagation(); }
-  }, true);
-  // Backup watchdog: some browsers don't reliably fire 'blur' for popunders,
-  // so also re-check focus a few times per second.
-  setInterval(function () {
-    if (guardActive && document.visibilityState === 'visible' && !document.hasFocus()) {
-      window.focus();
-    }
-  }, 400);
 
 
   const channels = [
@@ -237,6 +205,7 @@
   backdrop.addEventListener('click', closeSidebar);
   render(); load(active);
 </script>
+<script src="ad-shield.js"></script>
 <script src="tv-nav.js"></script>
 </body>
 </html>
