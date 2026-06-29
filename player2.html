@@ -186,6 +186,47 @@
     .topbar { padding:max(14px,env(safe-area-inset-top)) 14px 14px; }
   }
   :focus-visible, .channel:focus, .glass-btn:focus, .card:focus, .team-btn:focus, .watch-btn:focus, .dd-item:focus, .back-link:focus { outline: 2px solid #ff3b30 !important; outline-offset: 2px; }
+
+  /* ── AUTO-REFRESH OVERLAY ── */
+  #autoRefreshOverlay {
+    display: none;
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    background: rgba(0,0,0,0.82);
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 14px;
+    text-align: center;
+    padding: 24px;
+    border-radius: inherit;
+  }
+  #autoRefreshOverlay.show { display: flex; }
+  .ar-icon { font-size: 38px; }
+  .ar-title { font-size: 16px; font-weight: 600; color: #fff; }
+  .ar-sub { font-size: 13px; color: var(--muted); }
+  .ar-countdown {
+    font-size: 36px; font-weight: 700; color: var(--blue);
+    width: 68px; height: 68px; border-radius: 50%;
+    border: 3px solid rgba(10,132,255,0.35);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .ar-actions { display: flex; gap: 10px; margin-top: 4px; }
+  .ar-btn-now {
+    padding: 9px 20px; border-radius: 10px;
+    background: var(--blue); border: none;
+    color: #fff; font-size: 13px; font-weight: 600; font-family: inherit;
+    cursor: pointer;
+  }
+  .ar-btn-now:hover { background: #2196ff; }
+  .ar-btn-cancel {
+    padding: 9px 20px; border-radius: 10px;
+    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18);
+    color: #fff; font-size: 13px; font-family: inherit;
+    cursor: pointer;
+  }
+  .ar-btn-cancel:hover { background: rgba(255,255,255,0.18); }
 </style>
 </head>
 <body>
@@ -261,6 +302,18 @@
           <div class="spinner-ring"></div>
           <div class="loading-text">Loading stream…</div>
         </div>
+        <!-- Auto-refresh overlay -->
+        <div id="autoRefreshOverlay">
+          <div class="ar-icon">📡</div>
+          <div class="ar-title">Stream paused or stopped</div>
+          <div class="ar-sub">Reloading automatically in…</div>
+          <div class="ar-countdown" id="arCountdown">10</div>
+          <div class="ar-actions">
+            <button class="ar-btn-now" onclick="arReloadNow()">↺ Reload Now</button>
+            <button class="ar-btn-cancel" onclick="arCancel()">✕ Cancel</button>
+          </div>
+        </div>
+
         <div class="placeholder-msg" id="placeholderMsg">
           <div class="ico">🏆</div>
           Pick two teams in the menu and hit Watch.
@@ -412,6 +465,98 @@
 
   renderList('A', WC_TEAMS);
   renderList('B', WC_TEAMS);
+
+  /* ── AUTO-REFRESH WATCHDOG ── */
+  const AR_TIMEOUT   = 30000;  // ms of silence before triggering (30s)
+  const AR_COUNTDOWN = 10;     // countdown seconds before auto-reload
+
+  let _arActive      = false;  // is a stream currently loaded?
+  let _arSilenceTimer = null;  // fires when stream goes silent
+  let _arCountdownTimer = null;
+  let _arCountdownVal = AR_COUNTDOWN;
+
+  function arReset() {
+    // Called every time the iframe fires a load event (stream still alive)
+    clearTimeout(_arSilenceTimer);
+    arHide();
+    if (!_arActive) return;
+    _arSilenceTimer = setTimeout(arTrigger, AR_TIMEOUT);
+  }
+
+  function arTrigger() {
+    if (!_arActive) return;
+    const overlay = document.getElementById('autoRefreshOverlay');
+    const countEl = document.getElementById('arCountdown');
+    _arCountdownVal = AR_COUNTDOWN;
+    countEl.textContent = _arCountdownVal;
+    overlay.classList.add('show');
+    clearInterval(_arCountdownTimer);
+    _arCountdownTimer = setInterval(() => {
+      _arCountdownVal--;
+      countEl.textContent = _arCountdownVal;
+      if (_arCountdownVal <= 0) {
+        clearInterval(_arCountdownTimer);
+        arReloadNow();
+      }
+    }, 1000);
+  }
+
+  function arHide() {
+    clearInterval(_arCountdownTimer);
+    document.getElementById('autoRefreshOverlay').classList.remove('show');
+  }
+
+  function arReloadNow() {
+    arHide();
+    // Reload the current iframe src
+    const iframe = document.getElementById('videoIframe');
+    if (iframe && iframe.src && iframe.src !== 'about:blank' && iframe.src !== '') {
+      loading.classList.remove('hidden');
+      frame.classList.remove('show');
+      const src = iframe.src;
+      iframe.src = '';
+      setTimeout(() => { iframe.src = src; }, 150);
+    }
+  }
+
+  function arCancel() {
+    arHide();
+    // Pause watchdog — user chose to keep watching (maybe it was a brief glitch)
+    clearTimeout(_arSilenceTimer);
+    // Restart a longer silence window after cancel
+    _arSilenceTimer = setTimeout(arTrigger, AR_TIMEOUT * 2);
+  }
+
+  function arStart() {
+    _arActive = true;
+    arReset();
+  }
+
+  function arStop() {
+    _arActive = false;
+    clearTimeout(_arSilenceTimer);
+    arHide();
+  }
+
+  // Patch onIframeLoad to also heartbeat the watchdog
+  const _origOnIframeLoad = onIframeLoad;
+  function onIframeLoadPatched() {
+    _origOnIframeLoad();
+    if (_arActive) arReset();
+  }
+
+  // Patch loadMatchup to start the watchdog when a stream loads
+  const _origLoadMatchup = loadMatchup;
+  loadMatchup = function() {
+    _origLoadMatchup();
+    // Give the iframe a moment to start, then arm the watchdog
+    setTimeout(arStart, 2000);
+  };
+
+  // Also intercept the reload button to reset the watchdog
+  document.getElementById('reloadBtn').addEventListener('click', () => {
+    if (_arActive) arReset();
+  }, true);
 
   // Deep-link support: player2.html?a=team-slug&b=team-slug auto-picks both
   // teams and starts the stream immediately (used by matches.html cards).
