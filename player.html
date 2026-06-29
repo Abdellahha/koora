@@ -66,6 +66,10 @@
   .ch-sub { font-size: 11px; color: var(--muted); }
 
   .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); opacity: 0; flex-shrink: 0; }
+
+  .ch-badge-4k { background: linear-gradient(135deg, #7c3aed, #a855f7) !important; color: #fff !important; border-color: rgba(168,85,247,0.5) !important; font-size: 10px !important; letter-spacing: 0.5px; }
+  .channel.active .ch-badge-4k { background: linear-gradient(135deg, #6d28d9, #9333ea) !important; }
+  .badge-4k-label { display: inline-block; font-size: 9px; font-weight: 800; letter-spacing: 1px; }
   .channel.active .live-dot { opacity: 1; }
 
   .sidebar-footer { padding: 14px 18px; border-top: 1px solid var(--border); font-size: 11px; color: var(--muted); }
@@ -135,7 +139,7 @@
       </div>
     </div>
     <div class="playlist" id="playlist"></div>
-    <div class="sidebar-footer" id="footerCount">4 channels · Streaming live</div>
+    <div class="sidebar-footer" id="footerCount">5 channels · Streaming live</div>
   </aside>
 
   <main class="main">
@@ -185,7 +189,8 @@
     { name: "beIN Sport Max 1", sub: "Live Channel", code: "M1", url: "https://www.ntvs.cx/embed?t=OThTUzhFbk9WeExodUtsTmV0cFgxK2wrTHpQQjNWZVFQV09meFQ4YlhVWUxNKy9tUnFBdlFpWlNSeGIxakpjLw~~" },
     { name: "beIN Sport Max 2", sub: "Live Channel", code: "M2", url: "https://www.ntvs.cx/embed?t=OThTUzhFbk9WeExodUtsTmV0cFgxK2wrTHpQQjNWZVFQV09meFQ4YlhVWVc1OENxMkE1Q1RsZDNHWnRMKzVjRA~~" },
     { name: "beIN Sport Max 3", sub: "Live Channel", code: "M3", url: "https://www.ntvs.cx/embed?t=OThTUzhFbk9WeExodUtsTmV0cFgxK2wrTHpQQjNWZVFQV09meFQ4YlhVYndkT3RiWHNiVlVYTHRiOG4rQUlNcA~~" },
-    { name: "beIN Sport Max 4", sub: "Live Channel", code: "M4", url: "https://www.ntvs.cx/embed?t=OThTUzhFbk9WeExodUtsTmV0cFgxK2wrTHpQQjNWZVFQV09meFQ4YlhVWmNpMmpoZktrYTJOY25Ha0s5SzRuQg~~" }
+    { name: "beIN Sport Max 4", sub: "Live Channel", code: "M4", url: "https://www.ntvs.cx/embed?t=OThTUzhFbk9WeExodUtsTmV0cFgxK2wrTHpQQjNWZVFQV09meFQ4YlhVWmNpMmpoZktrYTJOY25Ha0s5SzRuQg~~" },
+    { name: "beIN Sport Max 4K", sub: "4K Live Channel", code: "4K", url: "__4K__", is4k: true }
   ];
 
   const playlistEl = document.getElementById('playlist');
@@ -203,7 +208,7 @@
       const el = document.createElement('div');
       el.className = 'channel' + (i === active ? ' active' : '');
       el.innerHTML = `
-        <div class="ch-badge">${ch.code}</div>
+        <div class="ch-badge${ch.is4k ? ' ch-badge-4k' : ''}">${ch.is4k ? '<span class="badge-4k-label">4K</span>' : ch.code}</div>
         <div class="ch-info">
           <div class="ch-name">${ch.name}</div>
           <div class="ch-sub">${ch.sub}</div>
@@ -219,12 +224,26 @@
     if (window.innerWidth <= 860) closeSidebar();
   }
 
+  const IFRAME_4K = `<iframe src="https://xyzstreams.st/wc-10-embed.html" width="100%" height="100%" frameborder="0" scrolling="no" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
+
   function load(i) {
     const ch = channels[i];
     title.textContent = ch.name;
     loading.classList.remove('hidden');
     frame.classList.remove('show');
-    const old = document.getElementById('videoIframe');
+    const oldEl = document.getElementById('videoIframe');
+
+    if (ch.is4k) {
+      // Inject the 4K embed directly into a wrapper div
+      const wrapper = document.createElement('div');
+      wrapper.id = 'videoIframe';
+      wrapper.style.cssText = 'width:100%;height:100%;display:block;';
+      wrapper.innerHTML = IFRAME_4K;
+      oldEl.replaceWith(wrapper);
+      setTimeout(() => { loading.classList.add('hidden'); frame.classList.add('show'); }, 600);
+      return;
+    }
+
     const newIframe = document.createElement('iframe');
     newIframe.id = 'videoIframe';
     newIframe.allowFullscreen = true;
@@ -233,15 +252,13 @@
     newIframe.setAttribute('webkit-playsinline', '');
     newIframe.setAttribute('allow', 'autoplay; fullscreen; encrypted-media; picture-in-picture');
     newIframe.setAttribute('referrerpolicy', 'no-referrer');
-    // Sandbox = real popup/redirect blocking, but some embeds refuse to play
-    // inside a sandboxed iframe on iOS Safari. So: sandbox everywhere except iOS.
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     if (!isIOS) {
       newIframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation allow-forms');
     }
     newIframe.style.cssText = 'width:100%;height:100%;border:0;display:block;';
     newIframe.addEventListener('load', onIframeLoad);
-    old.replaceWith(newIframe);
+    oldEl.replaceWith(newIframe);
     newIframe.src = ch.url;
   }
   function onIframeLoad() {
