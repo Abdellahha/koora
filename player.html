@@ -115,35 +115,6 @@
     .player-frame { border-radius: 10px; }
     .topbar { padding: max(14px, env(safe-area-inset-top)) 14px 14px; }
   }
-  
-  /* ── AUTO-REFRESH OVERLAY ── */
-  #autoRefreshOverlay {
-    display:none; position:absolute; inset:0; z-index:10;
-    background:rgba(0,0,0,0.82); align-items:center; justify-content:center;
-    flex-direction:column; gap:14px; text-align:center; padding:24px; border-radius:inherit;
-  }
-  #autoRefreshOverlay.show { display:flex; }
-  .ar-icon  { font-size:38px; }
-  .ar-title { font-size:16px; font-weight:600; color:#fff; }
-  .ar-sub   { font-size:13px; color:rgba(255,255,255,0.5); }
-  .ar-countdown {
-    font-size:36px; font-weight:700;
-    width:68px; height:68px; border-radius:50%;
-    display:flex; align-items:center; justify-content:center;
-  }
-  .ar-actions { display:flex; gap:10px; margin-top:4px; }
-  .ar-btn-now {
-    padding:9px 20px; border-radius:10px; border:none;
-    color:#fff; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer;
-  }
-  .ar-btn-now:hover { opacity:.85; }
-  .ar-btn-cancel {
-    padding:9px 20px; border-radius:10px;
-    background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.18);
-    color:#fff; font-size:13px; font-family:inherit; cursor:pointer;
-  }
-  .ar-btn-cancel:hover { background:rgba(255,255,255,0.18); }
-
   :focus-visible, .channel:focus, .glass-btn:focus, .card:focus, .team-btn:focus, .watch-btn:focus, .dd-item:focus, .back-link:focus { outline: 2px solid #ff3b30 !important; outline-offset: 2px; }
 </style>
 </head>
@@ -292,13 +263,8 @@
   }
   function onIframeLoad() {
     setTimeout(() => { loading.classList.add('hidden'); frame.classList.add('show'); }, 300);
-    if (window.arHeartbeat) window.arHeartbeat();
   }
   document.getElementById('videoIframe').addEventListener('load', onIframeLoad);
-
-  // Start watchdog after each channel load
-  const _origLoad = load;
-  load = function(i) { _origLoad(i); setTimeout(function(){ if(window.arStart) window.arStart(); }, 1500); };
 
   document.getElementById('reloadBtn').addEventListener('click', () => load(active));
   document.getElementById('fullscreenBtn').addEventListener('click', () => {
@@ -316,115 +282,6 @@
 
   render();
   load(active);
-
-/* ── AUTO-REFRESH WATCHDOG ── */
-(function(){
-  var AR_SILENCE  = 30000;   // ms quiet before overlay appears
-  var AR_SECS     = 10;      // countdown seconds
-
-  var _active     = false;
-  var _silTimer   = null;
-  var _cdTimer    = null;
-  var _cdVal      = AR_SECS;
-  var _accentColor = getComputedStyle(document.documentElement)
-                      .getPropertyValue('--blue').trim() ||
-                     getComputedStyle(document.documentElement)
-                      .getPropertyValue('--accent').trim() || '#0a84ff';
-
-  /* inject HTML */
-  var frame = document.getElementById('playerFrame');
-  if (frame) {
-    var ov = document.createElement('div');
-    ov.id = 'autoRefreshOverlay';
-    ov.innerHTML =
-      '<div class="ar-icon">📡</div>' +
-      '<div class="ar-title">Stream paused or stopped</div>' +
-      '<div class="ar-sub">Reloading automatically in…</div>' +
-      '<div class="ar-countdown" id="arCountdown" style="color:' + _accentColor + ';border:3px solid ' + _accentColor + '44">10</div>' +
-      '<div class="ar-actions">' +
-        '<button class="ar-btn-now" style="background:' + _accentColor + '" onclick="arReloadNow()">↺ Reload Now</button>' +
-        '<button class="ar-btn-cancel" onclick="arCancel()">✕ Cancel</button>' +
-      '</div>';
-    frame.appendChild(ov);
-  }
-
-  function arHide() {
-    clearInterval(_cdTimer);
-    var ov = document.getElementById('autoRefreshOverlay');
-    if (ov) ov.classList.remove('show');
-  }
-
-  function arTrigger() {
-    if (!_active) return;
-    var ov = document.getElementById('autoRefreshOverlay');
-    var cd = document.getElementById('arCountdown');
-    if (!ov || !cd) return;
-    _cdVal = AR_SECS;
-    cd.textContent = _cdVal;
-    ov.classList.add('show');
-    clearInterval(_cdTimer);
-    _cdTimer = setInterval(function(){
-      _cdVal--;
-      cd.textContent = _cdVal;
-      if (_cdVal <= 0) { clearInterval(_cdTimer); arReloadNow(); }
-    }, 1000);
-  }
-
-  window.arReloadNow = function() {
-    arHide();
-    var ifrm = document.getElementById('videoIframe');
-    if (!ifrm) return;
-    var lo = document.getElementById('loadingOverlay');
-    var pf = document.getElementById('playerFrame');
-    if (lo) lo.classList.remove('hidden');
-    if (pf) { pf.classList.remove('show'); }
-    /* for the case where the iframe element itself has .show */
-    ifrm.classList && ifrm.classList.remove('show');
-    var src = ifrm.src;
-    if (src && src !== 'about:blank' && src !== '') {
-      ifrm.src = '';
-      setTimeout(function(){ ifrm.src = src; arReset(); }, 150);
-    }
-  };
-
-  window.arCancel = function() {
-    arHide();
-    clearTimeout(_silTimer);
-    _silTimer = setTimeout(arTrigger, AR_SILENCE * 2);
-  };
-
-  function arReset() {
-    clearTimeout(_silTimer);
-    arHide();
-    if (!_active) return;
-    _silTimer = setTimeout(arTrigger, AR_SILENCE);
-  }
-
-  window.arStart = function() { _active = true; arReset(); };
-  window.arStop  = function() { _active = false; clearTimeout(_silTimer); arHide(); };
-  window.arHeartbeat = arReset;   /* call on every iframe load event */
-
-  /* Observe iframe load events via MutationObserver + polling */
-  function watchIframe() {
-    var ifrm = document.getElementById('videoIframe');
-    if (!ifrm) return;
-    ifrm.addEventListener('load', function(){ if (_active) arReset(); });
-  }
-  /* Re-attach whenever the iframe element is replaced in the DOM */
-  var obs = new MutationObserver(function(muts){
-    muts.forEach(function(m){
-      m.addedNodes.forEach(function(n){
-        if (n.id === 'videoIframe') {
-          n.addEventListener('load', function(){ if (_active) arReset(); });
-        }
-      });
-    });
-  });
-  var pf2 = document.getElementById('playerFrame');
-  if (pf2) obs.observe(pf2, { childList: true, subtree: true });
-  watchIframe();
-})();
-
 </script>
 <script src="ad-shield.js"></script>
 <script src="tv-nav.js"></script>
