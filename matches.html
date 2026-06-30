@@ -196,7 +196,7 @@ html,body{width:100%;height:100%;background:#000;color:var(--text);font-family:-
         <iframe id="videoIframe" src=""
           allowfullscreen webkit-allowfullscreen playsinline webkit-playsinline
           allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
-          referrerpolicy="no-referrer"
+          referrerpolicy="strict-origin-when-cross-origin"
           style="width:100%;height:100%;border:0;display:block;"></iframe>
       </div>
     </div>
@@ -396,7 +396,7 @@ function loadMatch(i) {
   nf.setAttribute('playsinline', '');
   nf.setAttribute('webkit-playsinline', '');
   nf.setAttribute('allow', 'autoplay; fullscreen; encrypted-media; picture-in-picture');
-  nf.setAttribute('referrerpolicy', 'no-referrer');
+  nf.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
   nf.style.cssText = 'width:100%;height:100%;border:0;display:block;';
   nf.addEventListener('load', function() {
     setTimeout(function(){ overlay.classList.add('hidden'); nf.classList.add('show'); }, 400);

@@ -1,154 +1,89 @@
-/* ad-shield.js — ad/popup blocking, iOS-safe version.
-   Fixed issues:
-   - Removed beforeunload guard (breaks iOS Safari navigation & video)
-   - Removed blur/focus watchdog (interferes with iOS video player focus)
-   - Removed window.open override (iOS video players use it internally)
-   - Removed setInterval refocus (continuously interrupts iOS video)
-   - Kept: popup link blocking, postMessage guard, DOM cleaner
+/* ad-shield.js — iOS-safe ad/popup blocking.
+   Key iOS fixes vs old version:
+   - NO beforeunload listener (breaks iOS video navigation)
+   - NO blur/window.focus() loop (fights iOS video player for focus)
+   - NO window.open override on iOS (HLS players use it internally)
+   - NO setInterval refocus (interrupts iOS video continuously)
 */
 (function () {
   'use strict';
 
   var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
-  /* ── 1. Block _blank link clicks (ads opening new tabs) ─────────────── */
+  /* ── 1. Block _blank ad links ────────────────────────────────────────── */
   document.addEventListener('click', function (e) {
     var a = e.target.closest('a[target="_blank"]');
-    if (a) { e.preventDefault(); e.stopPropagation(); }
+    if (a && !a.classList.contains('back-link')) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
   }, true);
 
-  // Block middle-click new-tab (desktop only)
+  /* ── 2. window.open — only block on desktop, iOS needs it for streams ── */
   if (!isIOS) {
-    document.addEventListener('auxclick', function (e) {
-      if (e.button === 1) { e.preventDefault(); e.stopPropagation(); }
-    }, true);
-  }
-
-  /* ── 2. window.open guard — only block clearly ad-like opens ────────── */
-  // On iOS we skip overriding window.open entirely because video players
-  // (especially HLS embeds) use it internally to set up stream sessions.
-  if (!isIOS) {
-    var _origOpen = window.open;
+    var _orig = window.open;
     window.open = function (url, name, features) {
-      // Allow opens that have no URL (player internal calls) or same-origin
-      if (!url) return _origOpen.apply(window, arguments);
+      if (!url) return _orig.apply(window, arguments);
       try {
-        var targetHost = new URL(url, location.href).hostname;
-        if (targetHost === location.hostname) return _origOpen.apply(window, arguments);
+        var h = new URL(url, location.href).hostname;
+        if (h === location.hostname) return _orig.apply(window, arguments);
       } catch(e) {}
-      // Block everything else (ad popups)
-      console.warn('[ad-shield] popup blocked:', url);
+      console.warn('[ad-shield] blocked popup:', url);
       return null;
     };
   }
 
-  /* ── 3. postMessage hijack catcher ───────────────────────────────────── */
+  /* ── 3. postMessage redirect catcher ─────────────────────────────────── */
   window.addEventListener('message', function (e) {
     var d = e.data;
-    if (typeof d === 'string' && /(redirect|navigate|location|href|open)/i.test(d)) {
+    if (typeof d === 'string' && /(redirect|navigate|open\s+url)/i.test(d)) {
       e.stopImmediatePropagation();
     }
   }, true);
 
-  /* ── 4. Shield overlay over the player iframe ────────────────────────── */
-  function installShield(frameEl) {
-    var wrap = frameEl.parentElement;
-    if (!wrap || wrap.querySelector('.ad-shield-overlay')) return;
+  /* ── 4. DOM ad cleaner for same-origin iframes ───────────────────────── */
+  var AD_SEL = [
+    '[style*="position:fixed"],[style*="position: fixed"]',
+    '.ad-overlay,.popup,.modal-ad,.interstitial',
+    'iframe[src*="doubleclick"],iframe[src*="googlesyndication"]',
+  ].join(',');
 
-    var shield = document.createElement('div');
-    shield.className = 'ad-shield-overlay';
-    shield.style.cssText = [
-      'position:absolute',
-      'inset:0',
-      'z-index:9999',
-      'pointer-events:none',
-      'background:transparent',
-    ].join(';');
-
-    wrap.style.position = wrap.style.position || 'relative';
-    wrap.appendChild(shield);
-
-    var shieldTimer = null;
-    function armShield(ms) {
-      shield.style.pointerEvents = 'all';
-      clearTimeout(shieldTimer);
-      shieldTimer = setTimeout(function () {
-        shield.style.pointerEvents = 'none';
-      }, ms || 600);
-    }
-
-    frameEl.addEventListener('load', function () {
-      try {
-        var iwin = frameEl.contentWindow;
-        if (!iwin) return;
-        // On desktop only — on iOS, blur listener kills the video player
-        if (!isIOS) {
-          iwin.addEventListener('blur', function () {
-            armShield(800);
-          });
-        }
-        scanAndRemoveAds(frameEl);
-      } catch (e) { /* cross-origin */ }
-    });
-  }
-
-  /* ── 5. In-iframe DOM cleaner (same-origin only) ─────────────────────── */
-  var AD_SELECTORS = [
-    '[style*="position:fixed"]',
-    '[style*="position: fixed"]',
-    '.ad', '.ads', '.advert', '.advertisement', '.ad-container', '.ad-wrap',
-    '.ad-overlay', '.popup', '.pop-up', '.modal-ad', '.interstitial',
-    '[id*="advert"]', '[id*="banner"]', '[id*="popup"]', '[id*="overlay"]',
-    '[class*="advert"]', '[class*="banner-ad"]', '[class*="popup"]',
-    'iframe[src*="doubleclick"]', 'iframe[src*="googlesyndication"]',
-    'iframe[src*="adnxs"]', 'iframe[src*="ads."]',
-  ];
-
-  function scanAndRemoveAds(frameEl) {
+  function scanAds(frameEl) {
     try {
       var doc = frameEl.contentDocument;
       if (!doc) return;
-      AD_SELECTORS.forEach(function (sel) {
+      doc.querySelectorAll(AD_SEL).forEach(function (n) {
         try {
-          doc.querySelectorAll(sel).forEach(function (node) {
-            var cs = doc.defaultView.getComputedStyle(node);
-            var zi = parseInt(cs.zIndex, 10);
-            var pos = cs.position;
-            if ((pos === 'fixed' || pos === 'absolute') && (isNaN(zi) || zi > 100)) {
-              node.remove();
-            }
-          });
-        } catch (e2) {}
+          var cs = doc.defaultView.getComputedStyle(n);
+          if ((cs.position === 'fixed' || cs.position === 'absolute') && parseInt(cs.zIndex) > 100) n.remove();
+        } catch(e2) {}
       });
-    } catch (e) { /* cross-origin */ }
+    } catch(e) {}
   }
 
-  /* ── 6. Auto-install on page ready + watch for new iframes ──────────── */
-  function processIframes() {
-    document.querySelectorAll('#playerFrame iframe, #videoIframe').forEach(function (f) {
-      installShield(f);
-    });
+  /* ── 5. Install per-iframe ───────────────────────────────────────────── */
+  function installShield(frameEl) {
+    if (frameEl._adShielded) return;
+    frameEl._adShielded = true;
+    frameEl.addEventListener('load', function () { scanAds(frameEl); });
+  }
+
+  function processAll() {
+    document.querySelectorAll('iframe').forEach(installShield);
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', processIframes);
-  } else {
-    processIframes();
-  }
+    document.addEventListener('DOMContentLoaded', processAll);
+  } else { processAll(); }
 
-  var mo = new MutationObserver(function (mutations) {
-    mutations.forEach(function (m) {
+  new MutationObserver(function (muts) {
+    muts.forEach(function (m) {
       m.addedNodes.forEach(function (n) {
         if (n.tagName === 'IFRAME') installShield(n);
-        else if (n.querySelectorAll) {
-          n.querySelectorAll('iframe').forEach(installShield);
-        }
+        else if (n.querySelectorAll) n.querySelectorAll('iframe').forEach(installShield);
       });
     });
-  });
-  mo.observe(document.body, { childList: true, subtree: true });
+  }).observe(document.body, { childList: true, subtree: true });
 
-  /* ── 7. Expose disarm function for intentional navigation ────────────── */
   window.adShieldDisarm = function () {};
-
 })();
