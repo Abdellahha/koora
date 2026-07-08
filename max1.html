@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Live Stream</title>
+
+<!-- Streaming libraries -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/mpegts.js@latest/dist/mpegts.min.js"></script>
+
+<style>
+  :root {
+    --border: rgba(255,255,255,0.14);
+    --text: #fff;
+    --muted: rgba(255,255,255,0.5);
+    --accent: #ff3b30;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%; height: 100%;
+    background: #000;
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+
+  .app { display: flex; flex-direction: column; height: 100dvh; width: 100dvw; }
+
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: max(12px, env(safe-area-inset-top)) 16px 12px;
+    background: #121214;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .now-playing { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .now-playing h2 {
+    font-size: 15px; font-weight: 600; letter-spacing: -0.2px;
+    max-width: 60vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .live-badge {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.8px;
+    padding: 4px 10px; border-radius: 20px;
+    background: rgba(255,59,48,0.15); color: #ff6b6b;
+    border: 1px solid rgba(255,59,48,0.35);
+    flex-shrink: 0;
+  }
+  .controls { display: flex; gap: 8px; flex-shrink: 0; }
+  .glass-btn {
+    height: 34px; width: 34px; border-radius: 10px;
+    background: #1a1b1e; border: 1px solid var(--border);
+    color: var(--text); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; transition: background 0.15s;
+  }
+  .glass-btn:hover { background: rgba(255,255,255,0.12); }
+  .glass-btn:active { opacity: 0.8; }
+
+  .player-wrap {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    background: #000; position: relative; overflow: hidden;
+  }
+  .player-frame {
+    position: relative; width: 100%; height: 100%;
+    background: #000; opacity: 0; transition: opacity 0.25s ease;
+  }
+  .player-frame.show { opacity: 1; }
+  video { width: 100%; height: 100%; object-fit: contain; background: #000; display: block; }
+
+  /* YouTube-style overlay controls */
+  .yt-controls {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,0.85));
+    padding: 12px 16px 14px; z-index: 10;
+    display: flex; flex-direction: column; gap: 10px;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s ease-in-out;
+  }
+  .player-frame:hover .yt-controls, .yt-controls:focus-within { opacity: 1; pointer-events: auto; }
+
+  .yt-progress-container { width: 100%; height: 3px; background: rgba(255,255,255,0.2); position: relative; }
+  .yt-progress-bar { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; background: var(--accent); }
+
+  .yt-control-row { display: flex; align-items: center; justify-content: space-between; }
+  .yt-left-controls, .yt-right-controls { display: flex; align-items: center; gap: 14px; }
+
+  .yt-btn {
+    background: transparent; border: none; color: #fff; cursor: pointer;
+    width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+    padding: 0; border-radius: 50%; transition: background 0.15s, transform 0.1s;
+  }
+  .yt-btn:hover { background: rgba(255,255,255,0.15); }
+  .yt-btn:active { transform: scale(0.95); }
+  .yt-btn svg { width: 22px; height: 22px; }
+
+  .yt-volume-wrapper { display: flex; align-items: center; }
+  .yt-volume-slider {
+    -webkit-appearance: none; width: 0; height: 3px; background: #fff;
+    outline: none; border-radius: 2px; opacity: 0;
+    transition: width 0.2s ease, opacity 0.2s ease; margin-left: 4px; cursor: pointer;
+  }
+  .yt-volume-wrapper:hover .yt-volume-slider, .yt-volume-slider:focus { width: 60px; opacity: 1; }
+  .yt-volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 10px; height: 10px; border-radius: 50%; background: #fff; cursor: pointer;
+  }
+
+  .yt-live-indicator {
+    color: #e5e5e5; font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; gap: 6px; letter-spacing: 0.5px;
+  }
+  .yt-live-dot { width: 6px; height: 6px; background: #f00; border-radius: 50%; display: inline-block; box-shadow: 0 0 5px #f00; }
+
+  .loading-overlay {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 16px; background: #0a0a0c; z-index: 5;
+    transition: opacity 0.2s ease;
+  }
+  .loading-overlay.hidden { opacity: 0; pointer-events: none; }
+  .spinner-ring {
+    width: 40px; height: 40px; border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--accent);
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 12px; color: var(--muted); letter-spacing: 0.3px; }
+
+  @media (max-width: 640px) {
+    .now-playing h2 { max-width: 45vw; }
+    .yt-controls { opacity: 1; pointer-events: auto; }
+  }
+
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="topbar">
+    <div class="now-playing">
+      <h2 id="channelTitle">Live Channel</h2>
+      <span class="live-badge">LIVE</span>
+    </div>
+    <div class="controls">
+      <button class="glass-btn" id="reloadBtn" title="Reload">⟳</button>
+      <button class="glass-btn" id="fullscreenBtn" title="Fullscreen">⛶</button>
+    </div>
+  </div>
+
+  <div class="player-wrap">
+    <div class="player-frame" id="playerFrame">
+      <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner-ring"></div>
+        <div class="loading-text">Loading stream…</div>
+      </div>
+
+      <video id="videoPlayer" playsinline autoplay></video>
+
+      <div class="yt-controls" id="ytControls">
+        <div class="yt-progress-container">
+          <div class="yt-progress-bar"></div>
+        </div>
+        <div class="yt-control-row">
+          <div class="yt-left-controls">
+            <button class="yt-btn" id="ytPlayBtn" title="Play/Pause">
+              <svg viewBox="0 0 24 24" id="playIcon" style="display:none;"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
+              <svg viewBox="0 0 24 24" id="pauseIcon"><path fill="currentColor" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+            </button>
+
+            <div class="yt-volume-wrapper">
+              <button class="yt-btn" id="ytMuteBtn" title="Mute/Unmute">
+                <svg viewBox="0 0 24 24" id="volumeUpIcon"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+                <svg viewBox="0 0 24 24" id="volumeOffIcon" style="display:none;"><path fill="currentColor" d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.21.05-.42.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>
+              </button>
+              <input type="range" class="yt-volume-slider" id="ytVolumeSlider" min="0" max="1" step="0.05" value="1">
+            </div>
+
+            <div class="yt-live-indicator">
+              <span class="yt-live-dot"></span>
+              LIVE
+            </div>
+          </div>
+
+          <div class="yt-right-controls">
+            <button class="yt-btn" id="ytReloadBtn" title="Reload Stream">
+              <svg viewBox="0 0 24 24"><path fill="currentColor" d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.07 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+            </button>
+            <button class="yt-btn" id="ytOverlayFullscreenBtn" title="Fullscreen">
+              <svg viewBox="0 0 24 24"><path fill="currentColor" d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   CONFIGURE YOUR SINGLE CHANNEL HERE:
+   ========================================================= */
+const STREAM_URL   = "http://eagle.rachid.tv:80/qzaqobmy62/f8bwh0acwa/146122";
+const CHANNEL_NAME = "beIN Sports MAX 1";
+/* ========================================================= */
+
+document.getElementById('channelTitle').textContent = CHANNEL_NAME;
+
+const video   = document.getElementById('videoPlayer');
+const frame   = document.getElementById('playerFrame');
+const loading = document.getElementById('loadingOverlay');
+
+const playBtn       = document.getElementById('ytPlayBtn');
+const playIcon       = document.getElementById('playIcon');
+const pauseIcon      = document.getElementById('pauseIcon');
+const muteBtn        = document.getElementById('ytMuteBtn');
+const volumeUpIcon   = document.getElementById('volumeUpIcon');
+const volumeOffIcon  = document.getElementById('volumeOffIcon');
+const volumeSlider   = document.getElementById('ytVolumeSlider');
+const ytReloadBtn    = document.getElementById('ytReloadBtn');
+const overlayFsBtn   = document.getElementById('ytOverlayFullscreenBtn');
+
+let hlsPlayer = null;
+let tsPlayer  = null;
+
+function cleanPlayers() {
+  if (hlsPlayer) { hlsPlayer.destroy(); hlsPlayer = null; }
+  if (tsPlayer) {
+    tsPlayer.unload();
+    tsPlayer.detachMediaElement();
+    tsPlayer.destroy();
+    tsPlayer = null;
+  }
+  video.src = '';
+}
+
+function loadStream(streamUrl) {
+  if (!streamUrl || streamUrl === 'PASTE_YOUR_STREAM_LINK_HERE') return;
+
+  loading.classList.remove('hidden');
+  frame.classList.remove('show');
+  cleanPlayers();
+
+  // Detect a raw Xtream Codes / MPEG-TS style link (no .m3u8 extension,
+  // path shaped like host:port/user/pass/id)
+  const isMpegTs = !streamUrl.includes('.m3u8') &&
+                   (streamUrl.endsWith('.ts') ||
+                    /:\d+\/[^/]+\/[^/]+\/\d+/.test(streamUrl) ||
+                    /^\d+$/.test(streamUrl.split('/').pop()));
+
+  if (isMpegTs) {
+    if (window.mpegts && mpegts.getFeatureList().mseLivePlayback) {
+      tsPlayer = mpegts.createPlayer({
+        type: 'mpegts',
+        isLive: true,
+        url: streamUrl,
+        cors: true
+      }, {
+        enableStashBuffer: false,
+        liveBufferLatencyChaser: true
+      });
+      tsPlayer.attachMediaElement(video);
+      tsPlayer.load();
+
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          video.muted = true;
+          video.play().catch(e => console.warn("Mpegts playback failed:", e));
+        });
+      }
+    } else {
+      video.src = streamUrl;
+      video.play().catch(e => console.warn("Direct stream playback prevented:", e));
+    }
+  } else {
+    if (window.Hls && Hls.isSupported()) {
+      hlsPlayer = new Hls({ enableWorker: true, lowLatencyMode: true });
+      hlsPlayer.loadSource(streamUrl);
+      hlsPlayer.attachMedia(video);
+      hlsPlayer.on(Hls.Events.MANIFEST_PARSED, function() {
+        const playPromise = video.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(() => {
+            video.muted = true;
+            video.play().catch(e => console.warn("Muted HLS playback fallback failed:", e));
+          });
+        }
+      });
+      hlsPlayer.on(Hls.Events.ERROR, function(event, data) {
+        if (data.fatal) {
+          switch (data.type) {
+            case Hls.ErrorTypes.NETWORK_ERROR:
+              hlsPlayer.startLoad();
+              break;
+            case Hls.ErrorTypes.MEDIA_ERROR:
+              hlsPlayer.recoverMediaError();
+              break;
+            default:
+              cleanPlayers();
+              break;
+          }
+        }
+      });
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = streamUrl;
+      video.play().catch(e => console.warn("Native HLS playback prevented:", e));
+    } else {
+      video.src = streamUrl;
+      video.play().catch(e => console.warn("Generic playback prevented:", e));
+    }
+  }
+}
+
+// Play / Pause
+function togglePlayState() {
+  if (video.paused) { video.play().catch(() => {}); }
+  else { video.pause(); }
+}
+playBtn.addEventListener('click', togglePlayState);
+video.addEventListener('click', togglePlayState);
+video.addEventListener('play',  () => { playIcon.style.display = 'none';  pauseIcon.style.display = 'block'; });
+video.addEventListener('pause', () => { playIcon.style.display = 'block'; pauseIcon.style.display = 'none'; });
+
+// Volume / Mute
+function updateVolumeUI() {
+  if (video.muted || video.volume === 0) {
+    volumeUpIcon.style.display = 'none';
+    volumeOffIcon.style.display = 'block';
+    volumeSlider.value = 0;
+  } else {
+    volumeUpIcon.style.display = 'block';
+    volumeOffIcon.style.display = 'none';
+    volumeSlider.value = video.volume;
+  }
+}
+muteBtn.addEventListener('click', () => { video.muted = !video.muted; updateVolumeUI(); });
+volumeSlider.addEventListener('input', (e) => {
+  const v = parseFloat(e.target.value);
+  video.volume = v;
+  video.muted = (v === 0);
+  updateVolumeUI();
+});
+video.addEventListener('volumechange', updateVolumeUI);
+
+// Fullscreen
+function togglePlayerFullscreen() {
+  const el = frame;
+  if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+    (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+  } else {
+    (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+  }
+}
+overlayFsBtn.addEventListener('click', togglePlayerFullscreen);
+document.getElementById('fullscreenBtn').addEventListener('click', togglePlayerFullscreen);
+
+// Reload
+function reload() { loadStream(STREAM_URL); }
+ytReloadBtn.addEventListener('click', reload);
+document.getElementById('reloadBtn').addEventListener('click', reload);
+
+// Loading indicator states
+video.addEventListener('playing', () => {
+  loading.classList.add('hidden');
+  frame.classList.add('show');
+  updateVolumeUI();
+});
+video.addEventListener('waiting', () => loading.classList.remove('hidden'));
+video.addEventListener('error', () => {
+  loading.classList.add('hidden');
+  frame.classList.add('show');
+});
+
+// Initialize
+loadStream(STREAM_URL);
+</script>
+</body>
+</html>
